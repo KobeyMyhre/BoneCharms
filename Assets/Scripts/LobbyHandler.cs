@@ -72,7 +72,7 @@ public class LobbyHandler : NetworkBehaviour
                 playerConnections[i].playerName = string.Format("BC_{0}", clientID);
                 playerConnections[i].clientID = clientID;
 
-                GameObject newBaby = NetworkObjectSpawner.SpawnNewNetworkObjectChangeOwnershipToClient(playerPrefab.gameObject, Vector3.zero, clientID, true);
+                GameObject newBaby = NetworkObjectSpawner.SpawnNewNetworkObjectChangeOwnershipToClient(playerPrefab.gameObject, Vector3.zero, clientID, false);
                 playerConnections[i].player = newBaby.GetComponent<BCPlayerInLobby>();
                 playerConnections[i].lobbyDisplay.InitPlayerDisplay(playerConnections[i].playerName, playerConnections[i].player.IsOwner);
                 if (playerConnections[i].player.IsOwner)
@@ -112,6 +112,7 @@ public class LobbyHandler : NetworkBehaviour
             {
                 //GO TO Gameplay
                 //TO DO Tell Clients to play Transition
+                BCPlayersInGame.instance.IniniateGameSession();
                 SceneLoader.instance.LoadSceneNetworked(eScenes.BoneCharmsMultiplayer);
                 return;
             }

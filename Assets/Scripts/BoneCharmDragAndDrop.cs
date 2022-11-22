@@ -4,11 +4,21 @@ using UnityEngine;
 
 public class BoneCharmDragAndDrop : MonoBehaviour
 {
+    enum eDragState
+    {
+        eNone,
+        eStandard,
+        eFlipped
+    }
+
+
+
     public static BoneCharmDragAndDrop instance;
 
     public BoneCharm currentSelected;
     public BaseHand dragHandReturn;
     public LayerMask dragLayer;
+    eDragState dragState = eDragState.eNone;
     Camera cam;
 
     private void Awake()
@@ -47,6 +57,7 @@ public class BoneCharmDragAndDrop : MonoBehaviour
         return Input.mousePosition;
     }
 
+   
     private void Update()
     {
         if(currentSelected != null && Input.GetMouseButton(0))
@@ -86,7 +97,7 @@ public class BoneCharmDragAndDrop : MonoBehaviour
                     madePlay = true;
                     Vector3 cursorPosition = GetCursorPositionOnBoard();
                     bool trackChosen = BoardCenter.instance.GetClosestEnd(cursorPosition);
-                    BoardCenter.instance.PlayBoneCharmServerRpc(BoneCharmManager.GetNetDataFromCharm(currentSelected), (int)dragHandReturn.playerID, trackChosen);
+                    BoardCenter.instance.PlayBoneCharmServerRpc(BoneCharmManager.GetNetDataFromCharm(currentSelected), (ulong)dragHandReturn.playerID, trackChosen);
                 }
                 //if (BoardCenter.instance.PlayBoneCharm(currentSelected, dragHandReturn))
                 //{
@@ -95,16 +106,20 @@ public class BoneCharmDragAndDrop : MonoBehaviour
                 //    madePlay = true;
                 //}
             }
-            ClearDragTarget(!madePlay);
+            ClearDragTarget(madePlay);
         }
     }
 
-    public void ClearDragTarget(bool placeValidHands)
+    public void ClearDragTarget(bool madePlay)
     {
         if(currentSelected != null)
         {
             //Send back to ActivePlayers hand
-            dragHandReturn.PlaceHandPositions(placeValidHands);
+            if (madePlay)
+            {
+               // dragHandReturn.EndTurn();
+            }
+            dragHandReturn.PlaceHandPositions();
             dragHandReturn = null;
             currentSelected = null;
         }

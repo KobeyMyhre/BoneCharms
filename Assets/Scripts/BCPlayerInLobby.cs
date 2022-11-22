@@ -7,17 +7,20 @@ public class BCPlayerInLobby : NetworkBehaviour
 {
     //public NetworkVariable<bool> playerReady = new NetworkVariable<bool>(false);
     public NetworkVariable<int> playerID = new NetworkVariable<int>(-1);
-
+    public NetworkVariable<int> roundPoints = new NetworkVariable<int>();
 
     private void Start()
     {
         if(IsServer)
         {
             playerID.Value = LobbyHandler.instance.GetPlayerIdx(OwnerClientId);
+            roundPoints.Value = 0;
         }
         else if(!IsOwner){
 
         }
+
+        DontDestroyOnLoad(gameObject);
         BCPlayersInGame.instance.AddPlayer(this);
     }
 
@@ -45,6 +48,17 @@ public class BCPlayerInLobby : NetworkBehaviour
     {
         //Not Ready Up W/ Server
         LobbyHandler.instance.PlayerNotReady(OwnerClientId, false);
+    }
+
+    public void AddRoundPoints(BaseHand myHand)
+    {
+        roundPoints.Value += myHand.myHand.Count;
+    }
+
+    public override void OnDestroy()
+    {
+        base.OnDestroy();
+        Debug.Log("Dont do This");
     }
 
     //public void ReadyUp(bool val)

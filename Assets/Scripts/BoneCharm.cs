@@ -263,6 +263,9 @@ public class BoneCharm : NetworkBehaviour
         {
             botSprite.enabled = true;
             topSprite.enabled = true;
+
+            //Only Turn on If it's our own charm
+            //DisplayRevealedIcon(true);
         }
         else
         {
@@ -361,12 +364,24 @@ public class BoneCharm : NetworkBehaviour
         return null;
     }
 
+    public eCharmType GetNotType(eCharmType charmType)
+    {
+        if(topCharmType.Value == charmType) { return botCharmType.Value; }
+        if(botCharmType.Value == charmType) { return topCharmType.Value;}
+        return eCharmType.eSizeOfCharms;
+    }
+
     public bool IsMatching(BoneCharm attachTo, eCharmType charmType)
     {
         //Point the sprite renderers outwards in a direction
         //Then compare the FoV's of the sprites and see if they match?
         //Find the 2 Looking at Each Other, if they dont match swap them?
-
+        eCharmType closestType = GetClosestPhysicalType(attachTo.GetCharmTypeRenderer(charmType).gameObject);
+        if(closestType != charmType)
+        {
+            return false;
+        }
+        return true;
 
         //South needs to match north
         if (botCharmType != attachTo.topCharmType)
@@ -396,6 +411,8 @@ public class BoneCharm : NetworkBehaviour
         float dist2 = Vector3.Distance(botSprite.transform.position, target.transform.position);
         return dist1 >= dist2 ? botCharmType.Value : topCharmType.Value; 
     }
+
+    
 
     public BoardCenter.eDirection GetCharmDirection()
     {
@@ -618,5 +635,10 @@ public class BoneCharm : NetworkBehaviour
     private void OnDrawGizmos()
     {
         
+    }
+
+    public BoneCharmNetData GetCharmNetData()
+    {
+        return new BoneCharmNetData(this);
     }
 }

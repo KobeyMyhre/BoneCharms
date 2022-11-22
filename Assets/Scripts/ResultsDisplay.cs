@@ -18,6 +18,7 @@ public class ResultsDisplay : MonoBehaviour
 
     public void ShowResults(bool winner)
     {
+        fillPanel.gameObject.SetActive(true);
         fillPanel.enabled = true;
         resultsText.gameObject.SetActive(true);
         resultsText.text = winner ? "Winner" : "Loser";
@@ -35,9 +36,13 @@ public class ResultsDisplay : MonoBehaviour
             yield return null;
         }
         yield return new WaitForSeconds(1.0f);
-        if(SceneLoader.instance)
+        if (BCPlayersInGame.instance)
         {
-            SceneLoader.instance.LoadMainMenuScene();
+            BCPlayersInGame.instance.ProgressToNextRound();
         }
+        //if(SceneLoader.instance)
+        //{
+        //    SceneLoader.instance.LoadMainMenuScene();
+        //}
     }
 }

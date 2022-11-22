@@ -36,10 +36,11 @@ public class PlayerHand : BaseHand
         }
     }
 
-    public override void EndTUrn()
+    public override void EndTurn()
     {
-        base.EndTUrn();
+        base.EndTurn();
         BoneCharmManager.instance.boneYard.ClearBoneYardSelectedEvents();
+        ClearCharmsSelected();
         ClearPlayables();
     }
 

@@ -2,13 +2,14 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
-
+using Unity.Netcode;
 
 public class EffectTargettingHandler : MonoBehaviour
 {
     public TextMeshProUGUI selectPlayerInfoText;
     public GameObject selectPlayerUI;
     List<PlayerUI> playersToTarget;
+    public PlayerUI hostPlayerUI;
 
     public GameObject selectBoneCharmUI;
     class HandSelectedBoneCharmSwap
@@ -27,8 +28,8 @@ public class EffectTargettingHandler : MonoBehaviour
     List<BoneCharm> swapCharms;
     BoneYard swapYard = null;
 
-    BoneCharm charmA;
-    BoneCharm charmB;
+    BoneCharm charmA = null;
+    BoneCharm charmB = null;
     eCharmType charmType;
     bool north;
 
@@ -40,7 +41,7 @@ public class EffectTargettingHandler : MonoBehaviour
         selectBoneCharmUI.SetActive(false);
     }
 
-    public void InitiateSelectBoneCharmUI(BoneCharm ca, BoneCharm cb, eCharmType ct, bool n)
+    public void InitiateSelectBoneCharmUI(eCharmType ct)
     {
         swapCharms = new List<BoneCharm>();
         selectBoneCharmUI.SetActive(true);
@@ -54,10 +55,10 @@ public class EffectTargettingHandler : MonoBehaviour
             hand.OverrideCharmsInHandSelectEvent(AddBoneCharmToSwap);
         }
 
-        charmA = ca;
-        charmB = cb;
+        charmA = null;
+        charmB = null;
         charmType = ct;
-        north = n;
+        north = false;
     }
 
     
@@ -82,8 +83,11 @@ public class EffectTargettingHandler : MonoBehaviour
                 {
                     cm.PlayPlayableEffect(false);
                 }
+
+                BoneCharmManager.instance.YellowCharmServerRpc(NetworkManager.Singleton.LocalClientId, swapCharms[0].GetCharmNetData(), swapCharms[1].GetCharmNetData());
+
                 //Swap Them
-                BoneCharmManager.instance.ResolveBoneCharmEffect(swapCharms[0], swapCharms[1], charmType, north, null);
+                //BoneCharmManager.instance.ResolveBoneCharmEffect(swapCharms[0], swapCharms[1], charmType, north, null);
                 //Restore Previous Boneyard/Hand Selection Events
                 BoneCharmManager.instance.boneYard.UpdateCharmsInYardToDrawOnSelect();
                 List<BaseHand> players = TurnManager.instance.GetPlayerHandsInGame();
@@ -103,15 +107,18 @@ public class EffectTargettingHandler : MonoBehaviour
     public void RemoveBoneCharmFromSwap(BoneCharm charm)
     {
         swapCharms.Remove(charm);
+        charm.PlayPlayableEffect(false);
         charm.UpdateBoneCharmSelectedEvent(AddBoneCharmToSwap);
     }
 
-    public void InitiateSelectPlayerUI(BoneCharm ca, BoneCharm cb, eCharmType ct, bool n)
+    public void InitiateSelectPlayerUI(eCharmType ct, ulong clientID)
     {
         selectPlayerUI.SetActive(true);
+        hostPlayerUI.gameObject.SetActive(false);
         playersToTarget = TurnManager.instance.GetNonActivePlayerUI();
         foreach(PlayerUI player in playersToTarget)
         {
+            player.gameObject.SetActive(true);
             player.UpdateOnSelected(ResolvePlayerSelection);
         }
 
@@ -124,10 +131,10 @@ public class EffectTargettingHandler : MonoBehaviour
             selectPlayerInfoText.text = "Select Target Player To Draw A BoneCharm";
         }
 
-        charmA = ca;
-        charmB = cb;
+        charmA = null;
+        charmB = null;
         charmType = ct;
-        north = n;
+        north = true;
     }
 
     public void ResolvePlayerSelection(BaseHand target)
@@ -137,7 +144,19 @@ public class EffectTargettingHandler : MonoBehaviour
             player.UpdateOnSelected(null);
         }
         selectPlayerUI.SetActive(false);
-        BoneCharmManager.instance.ResolveBoneCharmEffect(charmA, charmB, charmType, north, target);
+
+        if(charmType == eCharmType.ePurpleCharm)
+        {
+            BoneCharmManager.instance.PurpleCharmServerRpc(target.playerID);
+            //Send rpc
+        }
+        if(charmType == eCharmType.eGreenCharm)
+        {
+            BoneCharmManager.instance.GreenCharmServerRpc(target.playerID);
+            //Send rpc
+        }
+
+        //BoneCharmManager.instance.ResolveBoneCharmEffect(charmA, charmB, charmType, north, target);
     }
 
 }

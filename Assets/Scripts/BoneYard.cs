@@ -35,16 +35,14 @@ public class BoneYard : NetworkBehaviour
     public void BeginDraft(List<BoneCharm> freshSet)
     {
         SetIsInDraft(true);
-        //DisplayBoneYardDrawHint(false);
         boneYard = new List<BoneCharm>();
         initialDraft = new List<BoneCharm>();
         for(int i = 0; i < freshSet.Count; i++)
         {
             AddBoneCharmToBoneYard(freshSet[i], false);
         }
-        //BaseHand firstPlayer = TurnManager.instance.GetActivePlayerHand();
-        //firstPlayer.DraftAction();
         TurnManager.instance.SendStartDraftToClients();
+
         ShuffleBoneYard();
     }
 
@@ -66,7 +64,8 @@ public class BoneYard : NetworkBehaviour
             boneCharm.SetPreviousCharm(null);
             boneCharm.SetNextCharm(null);
             boneCharm.SetOwnerHand(null);
-            boneCharm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_FromBoneyard);
+            //boneCharm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_ServerRequest);
+            boneCharm.UpdateBoneCharmSelectedEvent(AddBoneToPlayerHandRequest);
             MoveBoneYardToCorners();
             ShuffleBoneYard();
         }
@@ -148,8 +147,8 @@ public class BoneYard : NetworkBehaviour
     void EndDraft(BoneCharm chosenDouble)
     {
         SetIsInDraft(false);
-        EndDraftClientRpc();
         ClearBoneYardSelectedEvents();
+        EndDraftClientRpc();
         //End Draft
         List<BoneCharm> firstPlayerHand = GetInitialHand(4);
         //Add Double to Player Hand
@@ -192,6 +191,29 @@ public class BoneYard : NetworkBehaviour
         Debug.Log("End Draft Client Rpc");
     }
 
+    public void AddBoneToPlayerHandRequest(BoneCharm boneCharm)
+    {
+        AddBoneToHandServerRpc(boneCharm.GetCharmNetData(), NetworkManager.Singleton.LocalClientId);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void AddBoneToHandServerRpc(BoneCharmNetData charmData, ulong handClientID)
+    {
+        AddBoneToHandClientRpc(charmData, handClientID);
+    }
+
+    [ClientRpc]
+    public void AddBoneToHandClientRpc(BoneCharmNetData charmData, ulong handClientID)
+    {
+        BoneCharm charm = BoneCharmManager.instance.GetCharmFromNetData(charmData);
+        BaseHand playerHand = TurnManager.instance.GetPlayerHandFromID(handClientID);
+        if(charm && playerHand)
+        {
+            playerHand.AddBoneToHand_FromBoneyard(charm);
+        }
+    }
+
+
     public void OverrideCharmsInYardSelectEvent(OnEventBoneCharm eventBoneCharm)
     {
         foreach (BoneCharm charm in boneYard)
@@ -205,7 +227,8 @@ public class BoneYard : NetworkBehaviour
     {
         foreach (BoneCharm charm in boneYard)
         {
-            charm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_FromBoneyard);
+            charm.UpdateBoneCharmSelectedEvent(AddBoneToPlayerHandRequest);
+            //charm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_ServerRequest);
         }
     }
 
@@ -291,6 +314,14 @@ public class BoneYard : NetworkBehaviour
 
     public void OnTurnUpdate(BC_Player bc_Player)
     {
+        if (bc_Player.isMe)
+        {
+            UpdateCharmsInYardToDrawOnSelect();
+        }
+        else
+        {
+            ClearBoneYardSelectedEvents();
+        }
         //DisplayBoneYardDrawHint(false);
         //DisplayBoneYard(false);
         //ClearBoneYardSelectedEvents();

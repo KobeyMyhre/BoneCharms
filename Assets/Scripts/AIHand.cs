@@ -36,7 +36,7 @@ public class AIHand : BaseHand
     public override void DraftAction()
     {
         base.DraftAction();
-        BoneCharmManager.instance.boneYard.ClearBoneYardSelectedEvents();
+        //BoneCharmManager.instance.boneYard.ClearBoneYardSelectedEvents();
         if (!isThinking)
         {
             StartCoroutine(DraftThink());
@@ -71,7 +71,7 @@ public class AIHand : BaseHand
         if(BoardCenter.instance.IsBoardEmpty())
         {
             int r = Random.Range(0, myHand.Count);
-            BoardCenter.instance.PlayBoneCharm(myHand[r], this, true);
+            //BoardCenter.instance.PlayBoneCharm(myHand[r], this, true);
             madePlay = true;
         }
         else
@@ -105,10 +105,10 @@ public class AIHand : BaseHand
                 //charm and give it a point value.
                 int r = Random.Range(0, options.Count);
                 Debug.Log("AI Played: " + options[r].gameObject.name);
-                if (!BoardCenter.instance.PlayBoneCharm(options[r], this, true))
-                {
-                    Debug.Log("AI SAD: It Didnt Get Played");
-                }
+                //if (!BoardCenter.instance.PlayBoneCharm(options[r], this, true))
+                //{
+                //    Debug.Log("AI SAD: It Didnt Get Played");
+                //}
                 madePlay = true;
             }
             else

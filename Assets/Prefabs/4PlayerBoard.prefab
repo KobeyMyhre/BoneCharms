@@ -1281,14 +1281,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   resultsDisplay: {fileID: 0}
-  playerCreationHandler: {fileID: 0}
+  playerCreationHandler: {fileID: 5272899956358452792}
   playerHand: {fileID: 1678253968536399547}
+  playerUI: {fileID: 0}
   otherHands:
   - {fileID: 1678253968536399541}
   - {fileID: 1678253968536399540}
   - {fileID: 1678253968536399542}
   playerUIs:
-  - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
   - {fileID: 0}
@@ -4262,11 +4262,11 @@ MonoBehaviour:
   playerBoardComponents:
   - baseHand: {fileID: 1678253968536399547}
     playerUI: {fileID: 0}
-  - baseHand: {fileID: 0}
+  - baseHand: {fileID: 1678253968536399541}
     playerUI: {fileID: 0}
-  - baseHand: {fileID: 0}
+  - baseHand: {fileID: 1678253968536399542}
     playerUI: {fileID: 0}
-  - baseHand: {fileID: 0}
+  - baseHand: {fileID: 1678253968536399540}
     playerUI: {fileID: 0}
 --- !u!1 &8119652456908076024
 GameObject:

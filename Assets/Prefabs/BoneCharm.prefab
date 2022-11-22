@@ -171,9 +171,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 455b3cb80ffe8974d9d00cd973c98133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  location:
-    location: 0
-    playerID: 0
   rotator: {fileID: 4751712309877994520}
   backdropRender: {fileID: 664586820340955754}
   charmMesh: {fileID: 6131119741367671095}
@@ -186,6 +183,10 @@ MonoBehaviour:
   botCharmType:
     m_InternalValue: 0
   botSprite: {fileID: 4669150835951270767}
+  charmLocation:
+    m_InternalValue: 0
+  playerID:
+    m_InternalValue: 0
   attachHolder: {fileID: 44937015132306491}
   north_Attach: {fileID: 1511302141089830671}
   east_Attach: {fileID: 8374991154221889621}
@@ -10394,14 +10395,14 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3347685217091284136}
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalRotation: {x: 0, y: 0, z: 1, w: 0}
   m_LocalPosition: {x: 0, y: -0.408, z: -0.021}
   m_LocalScale: {x: 0.9, y: 0.9, z: 0.9}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 332832368438591993}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 180}
 --- !u!212 &4669150835951270767
 SpriteRenderer:
   m_ObjectHideFlags: 0
@@ -10446,7 +10447,7 @@ SpriteRenderer:
   m_Sprite: {fileID: 21300000, guid: e3d3b765fd44c1c4dbbaee6179cc815b, type: 3}
   m_Color: {r: 0, g: 1, b: 0.05725074, a: 1}
   m_FlipX: 0
-  m_FlipY: 1
+  m_FlipY: 0
   m_DrawMode: 0
   m_Size: {x: 0.08, y: 0.08}
   m_AdaptiveModeThreshold: 0.5

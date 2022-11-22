@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+//using Unity.Netcode;
 
 public class GameplayTransitions : MonoBehaviour
 {
@@ -39,7 +40,7 @@ public class GameplayTransitions : MonoBehaviour
             charmB.PlayResolveEffect(charmType);
         }
         yield return new WaitForSeconds(transitionDelay);
-        BoneCharmManager.instance.ResolveBoneCharmEffect(charmA, charmB, charmType, north);
+        //BoneCharmManager.instance.ResolveBoneCharmEffect(charmA, charmB, charmType, north);
     }
 
 
@@ -80,6 +81,8 @@ public class GameplayTransitions : MonoBehaviour
     {
         //Move the Turn Token during this anim
         yield return new WaitForSeconds(transitionDelay);
+
+
         TurnManager.instance.TickTurnIdx(blueCharm);
     }
 }

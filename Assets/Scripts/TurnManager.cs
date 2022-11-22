@@ -21,6 +21,7 @@ public class TurnManager : NetworkBehaviour
     public ResultsDisplay resultsDisplay;
     public PlayerCreationHandler playerCreationHandler;
     public PlayerHand playerHand;
+    public PlayerUI playerUI;
     public List<AIHand> otherHands;
     public List<PlayerUI> playerUIs;
     [SerializeField]
@@ -37,6 +38,10 @@ public class TurnManager : NetworkBehaviour
         {
             instance = this;
             HideTurnToken();
+            for(int i =0; i < playerUIs.Count; i++)
+            {
+                playerUIs[i].gameObject.SetActive(false);
+            }
         }
         else
         {
@@ -44,7 +49,7 @@ public class TurnManager : NetworkBehaviour
         }
     }
 
-    PlayerUI GetSpawnedPlayerUI()
+    PlayerUI GetOtherPlayersUI()
     {
         for(int i = 0; i < playerUIs.Count; i++)
         {
@@ -55,6 +60,8 @@ public class TurnManager : NetworkBehaviour
         }
         return null;
     }
+
+ 
 
     BaseHand GetOtherPlayerHand()
     {
@@ -81,16 +88,20 @@ public class TurnManager : NetworkBehaviour
             if (newPlayer.clientID == NetworkManager.Singleton.LocalClientId)
             {
                 newPlayer.playerHand = playerHand;
+                newPlayer.playerUI = playerUI;
+                newPlayer.playerUI.SetUpPlayerUI(playerHand);
             }
             else
             {
                 newPlayer.playerHand = GetOtherPlayerHand();
+                newPlayer.playerUI = GetOtherPlayersUI();
+                newPlayer.playerUI.SetUpPlayerUI(newPlayer.playerHand);
             }
             newPlayer.playerHand.playerID = newPlayer.clientID;
             newPlayer.playerHand.SetNameText(string.Format("BC_{0}", newPlayer.clientID));
-            PlayerUI myUI = GetSpawnedPlayerUI();
-            myUI.SetUpPlayerUI(newPlayer.playerHand);
-            newPlayer.playerUI = myUI;
+            //PlayerUI myUI = GetOtherPlayersUI();
+            //myUI.SetUpPlayerUI(newPlayer.playerHand);
+            //newPlayer.playerUI = myUI;
 
             players.Add(newPlayer);
         }
@@ -115,16 +126,20 @@ public class TurnManager : NetworkBehaviour
             if (newPlayer.clientID == NetworkManager.Singleton.LocalClientId)
             {
                 newPlayer.playerHand = playerHand;
+                newPlayer.playerUI = playerUI;
+                newPlayer.playerUI.SetUpPlayerUI(playerHand);
             }
             else
             {
                 newPlayer.playerHand = GetOtherPlayerHand();
+                newPlayer.playerUI = GetOtherPlayersUI();
+                newPlayer.playerUI.SetUpPlayerUI(newPlayer.playerHand);
             }
             newPlayer.playerHand.playerID = newPlayer.clientID;
             newPlayer.playerHand.SetNameText(string.Format("BC_{0}", newPlayer.clientID));
-            PlayerUI myUI = GetSpawnedPlayerUI();
-            myUI.SetUpPlayerUI(newPlayer.playerHand);
-            newPlayer.playerUI = myUI;
+            //PlayerUI myUI = GetOtherPlayersUI();
+            //myUI.SetUpPlayerUI(newPlayer.playerHand);
+            //newPlayer.playerUI = myUI;
 
             players.Add(newPlayer);
         }
@@ -171,6 +186,13 @@ public class TurnManager : NetworkBehaviour
         return retval;
     }
 
+    public List<BaseHand> GetAllHands()
+    {
+        List<BaseHand> retval = new List<BaseHand>(otherHands);
+        retval.Add(playerHand);
+        return retval;
+    }
+
     public List<BaseHand> GetOtherPlayers()
     {
         List<BaseHand> retval = new List<BaseHand>();
@@ -201,6 +223,18 @@ public class TurnManager : NetworkBehaviour
             if(players[i].clientID == clientID)
             {
                 return players[i].playerHand;
+            }
+        }
+        return null;
+    }
+
+    public BC_Player GetPlayerFromID(ulong clientID)
+    {
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].clientID == clientID)
+            {
+                return players[i];
             }
         }
         return null;
@@ -276,7 +310,6 @@ public class TurnManager : NetworkBehaviour
     [ClientRpc]
     public void StartTurnsClientRpc(int playerIdx)
     {
-        if (IsServer) { return; }
         Debug.Log("Start Turn Player: " + playerIdx);
         if (playerIdx == GetPlayerIdx(NetworkManager.Singleton.LocalClientId))
         {
@@ -289,18 +322,40 @@ public class TurnManager : NetworkBehaviour
         }
     }
 
+    [ClientRpc]
+    public void DisplayWinnerClientRpc(ulong winnerID)
+    {
+        BC_Player winner = GetPlayerFromID(winnerID);
+        if(winner != null)
+        {
+            winner.score++;
+            resultsDisplay.ShowResults(winner.isMe);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ClientTickTurnIdxServerRpc(bool ignoreTick = false)
+    {
+        TickTurnIdx(ignoreTick);
+    }
+
     public void TickTurnIdx(bool ignoreTick = false)
     {
-        players[turnIdx].playerHand.EndTUrn();
+        if (!IsServer) { return; }
+
+        players[turnIdx].playerHand.EndTurn();
         int winner = CheckForGameOver();
         if(winner != -1)
         {
-            players[winner].score++;
-            resultsDisplay.ShowResults(players[winner].isMe);
-            //if(SceneLoader.instance)
-            //{
-            //    SceneLoader.instance.LoadMainMenuScene();
-            //}
+            //Add up all the Points
+            foreach(BC_Player p in players)
+            {
+                BCPlayerInLobby playerInGame = BCPlayersInGame.instance.GetPlayerInGame(p.clientID);
+                playerInGame.AddRoundPoints(p.playerHand);
+            }
+            //players[winner].score++;
+            //resultsDisplay.ShowResults(players[winner].isMe);
+            DisplayWinnerClientRpc(players[winner].clientID);
             return;
         }
 
@@ -320,6 +375,12 @@ public class TurnManager : NetworkBehaviour
     [ClientRpc]
     public void PassTurnClientRpc(int playerIdx)
     {
+        List<BaseHand> hands = GetAllHands();
+        foreach(BaseHand hand in hands)
+        {
+            hand.EndTurn();
+        }
+
         if (!IsServer) { turnIdx = playerIdx; }
         Debug.Log("Client Rpc Pass Turn To: " + playerIdx);
         if (playerIdx == GetPlayerIdx(NetworkManager.Singleton.LocalClientId))

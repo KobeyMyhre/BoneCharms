@@ -124,7 +124,7 @@ public class BoardCenter : NetworkBehaviour
     public SpriteRenderer northEndIcon;
     public BoneCharm northCharm;
 
-    public NetworkVariable<eCharmType> northType = new NetworkVariable<eCharmType>();
+    public NetworkVariable<eCharmType> northType = new NetworkVariable<eCharmType>(eCharmType.eSizeOfCharms);
     public eDirection northTrackDirection;
     eDirection prevNorthDir;
     bool northVerticalSwitch;
@@ -141,7 +141,7 @@ public class BoardCenter : NetworkBehaviour
 
     public SpriteRenderer southEndIcon;
     public BoneCharm southCharm;
-    public NetworkVariable<eCharmType> southType = new NetworkVariable<eCharmType>();
+    public NetworkVariable<eCharmType> southType = new NetworkVariable<eCharmType>(eCharmType.eSizeOfCharms);
     public eDirection southTrackDirection;
     eDirection prevSouthDir;
     bool southVerticalSwitch;
@@ -153,6 +153,12 @@ public class BoardCenter : NetworkBehaviour
     public float minBoardScale;
 
     public float maximumPlacementDistance;
+
+    public override void OnNetworkSpawn()
+    {
+        northType.Value = eCharmType.eSizeOfCharms;
+        southType.Value = eCharmType.eSizeOfCharms;
+    }
 
     private void Awake()
     {
@@ -209,34 +215,34 @@ public class BoardCenter : NetworkBehaviour
         return false;
     }
 
-    public bool PlayBoneCharm(BoneCharm newCharm, BaseHand originHand, bool northTrack, int negativeOne)
-    {
-        eCharmType[] types = newCharm.GetTypes();
-        for (int i = 0; i < types.Length; i++)
-        {
-            if(northTrack)
-            {
-                if (types[i] == GetNorthType())
-                {
-                    //newCharm.ClearBoneCharmSelectedEvent();
-                    originHand.RemoveCharmFromHand(newCharm);
-                    PlaceNewNorthTile(newCharm);
-                    return true;
-                }
-            }
-            else
-            {
-                if (types[i] == GetSouthType())
-                {
-                    //newCharm.ClearBoneCharmSelectedEvent();
-                    originHand.RemoveCharmFromHand(newCharm);
-                    PlaceNewSouthTile(newCharm);
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+    //public bool PlayBoneCharm(BoneCharm newCharm, BaseHand originHand, bool northTrack, int negativeOne)
+    //{
+    //    eCharmType[] types = newCharm.GetTypes();
+    //    for (int i = 0; i < types.Length; i++)
+    //    {
+    //        if(northTrack)
+    //        {
+    //            if (types[i] == GetNorthType())
+    //            {
+    //                //newCharm.ClearBoneCharmSelectedEvent();
+    //                originHand.RemoveCharmFromHand(newCharm);
+    //                PlaceNewNorthTile(newCharm);
+    //                return true;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            if (types[i] == GetSouthType())
+    //            {
+    //                //newCharm.ClearBoneCharmSelectedEvent();
+    //                originHand.RemoveCharmFromHand(newCharm);
+    //                PlaceNewSouthTile(newCharm);
+    //                return true;
+    //            }
+    //        }
+    //    }
+    //    return false;
+    //}
 
     public bool IsBoardEmpty()
     {
@@ -244,46 +250,38 @@ public class BoardCenter : NetworkBehaviour
     }
 
     [ClientRpc]
-    public void PlayBoneCharmClientRpc(BoneCharmNetData playedCharm, int clientID, bool north)
+    public void PlayBoneCharmClientRpc(BoneCharmNetData playedCharm, ulong clientID, bool north)
     {
 
         if (IsServer) { return; }
         BoneCharm newCharm = BoneCharmManager.instance.GetCharmFromNetData(playedCharm);
         //Remove Bonecharm from owner hand
-        BaseHand ownerHand = TurnManager.instance.GetPlayerHandFromID((ulong)clientID);
+        BaseHand ownerHand = TurnManager.instance.GetPlayerHandFromID(clientID);
         ownerHand.RemoveCharmFromHand(newCharm);
 
         Debug.Log("Client Rpc Play BoneCharm");
         if (boardChains.IsBoardEmpty())
         {
-            PlayBoneCharm(newCharm, ownerHand, true);
+            PlayBoneCharm(newCharm, ownerHand, true, clientID);
 
-            //newCharm.transform.position = ConvertToConsistentBoardZ(transform.position);
-            ////newCharm.transform.SetParent(boardScalar);
-            //newCharm.transform.localRotation = Quaternion.identity;
-            //newCharm.transform.localScale = Vector3.one;
-            //UpdateNorthCharm(newCharm);
-            //northTrackCount++;
-            //UpdateSouthCharm(newCharm);
-            //southTrackCount++;
-            //UpdateEndIcons();
+            
         }
         else
         {
             if (north)
             {
-                PlaceNewNorthTile(newCharm);
+                PlaceNewNorthTile(newCharm, clientID);
             }
             else
             {
-                PlaceNewSouthTile(newCharm);
+                PlaceNewSouthTile(newCharm, clientID);
             }
         }
         // Move Position Onto Board
     }
 
     [ServerRpc(RequireOwnership = false)]
-    public void PlayBoneCharmServerRpc(BoneCharmNetData netData, int clientID, bool north)
+    public void PlayBoneCharmServerRpc(BoneCharmNetData netData, ulong clientID, bool north)
     {
         BoneCharm playedCharm = BoneCharmManager.instance.GetCharmFromNetData(netData);
         if(playedCharm != null)
@@ -292,21 +290,22 @@ public class BoardCenter : NetworkBehaviour
             if(ownerHand != null)
             {
                 Debug.Log("Server Rpc Play BoneCharm");
+                ownerHand.RemoveCharmFromHand(playedCharm);
                 if (boardChains.IsBoardEmpty())
                 {
-                    PlayBoneCharm(playedCharm, ownerHand, true);
-                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), (int)ownerHand.playerID, true);
+                    PlayBoneCharm(playedCharm, ownerHand, true, clientID);
+                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), ownerHand.playerID, true);
                     return;
                 }
                 if (north)
                 {
-                    PlaceNewNorthTile(playedCharm);
-                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), (int)ownerHand.playerID, true);
+                    PlaceNewNorthTile(playedCharm, clientID);
+                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), ownerHand.playerID, true);
                 }
                 else
                 {
-                    PlaceNewSouthTile(playedCharm);
-                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), (int)ownerHand.playerID, false);
+                    PlaceNewSouthTile(playedCharm, clientID);
+                    PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(playedCharm), ownerHand.playerID, false);
                 }
             }
         }
@@ -338,7 +337,7 @@ public class BoardCenter : NetworkBehaviour
     }
    
 
-    public bool PlayBoneCharm(BoneCharm newCharm, BaseHand originHand, bool northTrack)
+    public bool PlayBoneCharm(BoneCharm newCharm, BaseHand originHand, bool northTrack, ulong clientID)
     {
         if(TurnManager.instance)
             TurnManager.instance.HideTurnToken();
@@ -373,14 +372,14 @@ public class BoardCenter : NetworkBehaviour
                 if (types[i] == GetNorthType() && northTrack)
                 {
                     originHand.RemoveCharmFromHand(newCharm);
-                    PlaceNewNorthTile(newCharm);
+                    PlaceNewNorthTile(newCharm, clientID);
                     //PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(newCharm), (int)originHand.playerID, true);
                     return true;
                 }
                 if (types[i] == GetSouthType() && !northTrack)
                 {
                     originHand.RemoveCharmFromHand(newCharm);
-                    PlaceNewSouthTile(newCharm);
+                    PlaceNewSouthTile(newCharm, clientID);
                     //PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(newCharm), (int)originHand.playerID, false);
                     return true;
                 }
@@ -425,7 +424,10 @@ public class BoardCenter : NetworkBehaviour
 
     public bool LookTarget(BoneCharm dragTarget, out Vector3 lookTarget)
     {
-        if(IsBoardEmpty())
+        lookTarget = Vector3.zero;
+        return false;
+
+        if (IsBoardEmpty())
         {
             lookTarget = Vector3.zero;
             return false;
@@ -435,6 +437,7 @@ public class BoardCenter : NetworkBehaviour
             lookTarget = Vector3.zero;
             float northDistance = Vector3.Distance(dragTarget.transform.position, northEndIcon.transform.position);
             float southDistance = Vector3.Distance(dragTarget.transform.position, southEndIcon.transform.position);
+            
             if (southDistance >= maximumPlacementDistance && northDistance >= maximumPlacementDistance) { return false; }
 
             if(northDistance < southDistance)
@@ -460,19 +463,19 @@ public class BoardCenter : NetworkBehaviour
         }
     }
 
-    void UpdateNorthCharm(BoneCharm newCharm)
+    void UpdateNorthCharm(BoneCharm newCharm, bool fromRemoval = false)
     {
         if (newCharm == null) { Debug.LogError("NewCharm Null"); return; }
-        if (northCharm != null)
-        {
-            northCharm.SetNextCharm(newCharm);
-            //if (northChain.Count <= 1)
-            //    northCharm.SetPreviousCharm(newCharm);
-            //else
-            //    northCharm.SetNextCharm(northCharm);
-        }
-        if (newCharm != null)
-            newCharm.SetPreviousCharm(northCharm);
+        //if (northCharm != null)
+        //{
+        //    northCharm.SetNextCharm(newCharm);
+        //    //if (northChain.Count <= 1)
+        //    //    northCharm.SetPreviousCharm(newCharm);
+        //    //else
+        //    //    northCharm.SetNextCharm(northCharm);
+        //}
+        //if (newCharm != null)
+        //    newCharm.SetPreviousCharm(northCharm);
 
         northCharm = newCharm;
         northCharm.SetRevealedState(true);
@@ -484,7 +487,19 @@ public class BoardCenter : NetworkBehaviour
         northEndIcon.transform.position = ConvertToConsistentBoardZ(northCharm.GetAttachPosition(northTrackDirection, northCharm));
         if (IsServer)
         {
-            northType.Value = northCharm.GetClosestPhysicalType(northEndIcon.gameObject);//northCharm.topCharmType; //Sometimes Bot Type
+            if (northType.Value == eCharmType.eSizeOfCharms)
+            {
+                northType.Value = northCharm.topCharmType.Value;
+            }
+            else if (fromRemoval)
+            {
+                northType.Value = northCharm.GetClosestPhysicalType(northEndIcon.gameObject);
+            }
+            else
+            {
+                northType.Value = northCharm.GetNotType(northType.Value);
+            }
+            //northType.Value = northCharm.GetClosestPhysicalType(northEndIcon.gameObject);//northCharm.topCharmType; //Sometimes Bot Type
         }
 
         northEndIcon.sprite = BoneCharmManager.instance.GetBoneCharmSprite(GetNorthType());
@@ -493,7 +508,7 @@ public class BoardCenter : NetworkBehaviour
         UpdateBounds();
     }
 
-    public void PlaceNewNorthTile(BoneCharm newCharm)
+    public void PlaceNewNorthTile(BoneCharm newCharm, ulong clientID)
     {
         
 
@@ -507,7 +522,7 @@ public class BoardCenter : NetworkBehaviour
         newCharm.ClearBoneCharmSelectedEvent();
         newCharm.SetOrientation(northTrackDirection);
 
-        if(newCharm.IsMatching(northCharm, GetNorthType()))
+        if(!newCharm.IsMatching(northCharm, GetNorthType()))
         {
             newCharm.RotateToMatch(false);
         }
@@ -523,7 +538,8 @@ public class BoardCenter : NetworkBehaviour
 
 
         //GameplayTransitions.instance.PlayBoneCharmOnBoard(northCharm, previousCharm, newPos, resolveType, true);
-        TurnManager.instance.TickTurnIdx();
+        BoneCharmManager.instance.ResolveBoneCharmEffect(resolveType, true, clientID);
+        //TurnManager.instance.TickTurnIdx();
 
     }
 
@@ -545,28 +561,28 @@ public class BoardCenter : NetworkBehaviour
 
     public BoneCharm RemoveNorthTrack()
     {
-        BoneCharm retval = northCharm;
-        BoneCharm newCharm = northCharm.GetPreviousCharm();
-        if(newCharm != null)
-            newCharm.RemoveEndCharm(retval);
+        //BoneCharm retval = northCharm;
+        //BoneCharm newCharm = northCharm.GetPreviousCharm();
+        //if(newCharm != null)
+        //    newCharm.RemoveEndCharm(retval);
         
 
-        retval = null;
-        newCharm = null;
+        //retval = null;
+        //newCharm = null;
 
-        retval = boardChains.GetNorthEnd(true);
-        newCharm = boardChains.GetNorthEnd(false);
+        BoneCharm retval = boardChains.GetNorthEnd(true);
+        BoneCharm newCharm = boardChains.GetNorthEnd(false);
 
         
-        northTrackCount--;
-        northTrackDirection = prevNorthDir;
+        //northTrackCount--;
+        //northTrackDirection = prevNorthDir;
         UpdateNorthChainDirection();
 
 
         northCharm = null;
-        UpdateNorthCharm(newCharm);
-        retval.SetNextCharm(null);
-        retval.SetPreviousCharm(null);
+        UpdateNorthCharm(newCharm, true);
+       // retval.SetNextCharm(null);
+        //retval.SetPreviousCharm(null);
 
         return retval;
     }
@@ -600,19 +616,19 @@ public class BoardCenter : NetworkBehaviour
         }
     }
 
-    void UpdateSouthCharm(BoneCharm newCharm)
+    void UpdateSouthCharm(BoneCharm newCharm, bool fromRemoval = false)
     {
         if(newCharm == null) { Debug.LogError("NewCharm Null"); return; }
-        if (southCharm != null)
-        {
-            if (southCharm.GetPreviousCharm() == null)
-                southCharm.SetPreviousCharm(newCharm);
+        //if (southCharm != null)
+        //{
+        //    if (southCharm.GetPreviousCharm() == null)
+        //        southCharm.SetPreviousCharm(newCharm);
             
-            //else
-            southCharm.SetNextCharm(newCharm);
-        }
-        if(newCharm != null)
-            newCharm.SetPreviousCharm(southCharm);
+        //    //else
+        //    southCharm.SetNextCharm(newCharm);
+        //}
+        //if(newCharm != null)
+        //    newCharm.SetPreviousCharm(southCharm);
 
         southCharm = newCharm;
         southCharm.SetRevealedState(true);
@@ -622,7 +638,19 @@ public class BoardCenter : NetworkBehaviour
         southEndIcon.transform.position = ConvertToConsistentBoardZ(southCharm.GetAttachPosition(southTrackDirection, southCharm));
         if (IsServer)
         {
-            southType.Value = southCharm.GetClosestPhysicalType(southEndIcon.gameObject);//southChain.Count <= 1 ? southCharm.botCharmType : southCharm.topCharmType; // Sometimes Bot Type
+            if(southType.Value == eCharmType.eSizeOfCharms)//First Play
+            {
+                southType.Value = southCharm.botCharmType.Value;
+            }
+            else if (fromRemoval)
+            {
+                southType.Value = southCharm.GetClosestPhysicalType(southEndIcon.gameObject);
+            }
+            else //Connection Plays
+            {
+                southType.Value = southCharm.GetNotType(southType.Value);
+            }
+            //southType.Value = southCharm.GetClosestPhysicalType(southEndIcon.gameObject);//southChain.Count <= 1 ? southCharm.botCharmType : southCharm.topCharmType; // Sometimes Bot Type
         }
 
         southEndIcon.sprite = BoneCharmManager.instance.GetBoneCharmSprite(GetSouthType());
@@ -631,7 +659,7 @@ public class BoardCenter : NetworkBehaviour
         UpdateBounds();
     }
     
-    public void PlaceNewSouthTile(BoneCharm newCharm)
+    public void PlaceNewSouthTile(BoneCharm newCharm, ulong clientID)
     {
 
 
@@ -644,23 +672,28 @@ public class BoardCenter : NetworkBehaviour
 
         newCharm.ClearBoneCharmSelectedEvent();
         newCharm.SetOrientation(southTrackDirection);
-        
 
-        if (boardChains.GetSouthCount() <= 1) //The first awkward south placement, Need a better way to do this
+
+        if (!newCharm.IsMatching(southCharm, GetSouthType()))
         {
-            if (newCharm.botCharmType != southCharm.botCharmType)
-            {
-                newCharm.RotateToMatch(false);
-            }
-            awkwardPlacement = true;
+            newCharm.RotateToMatch(false);
         }
-        else
-        {
-            if (newCharm.IsMatching(southCharm, GetSouthType()))
-            {
-                newCharm.RotateToMatch(false);
-            }
-        }
+
+        //if (boardChains.GetSouthCount() <= 1) //The first awkward south placement, Need a better way to do this
+        //{
+        //    if (newCharm.botCharmType != southCharm.botCharmType)
+        //    {
+        //        newCharm.RotateToMatch(false);
+        //    }
+        //    awkwardPlacement = true;
+        //}
+        //else
+        //{
+        //    if (!newCharm.IsMatching(southCharm, GetSouthType()))
+        //    {
+        //        newCharm.RotateToMatch(false);
+        //    }
+        //}
 
 
 
@@ -673,7 +706,8 @@ public class BoardCenter : NetworkBehaviour
         UpdateSouthChainDirection();
 
         //GameplayTransitions.instance.PlayBoneCharmOnBoard(southCharm, previousCharm, newPos, resolveType, false);
-        TurnManager.instance.TickTurnIdx();
+        BoneCharmManager.instance.ResolveBoneCharmEffect(resolveType, false, clientID);
+        //TurnManager.instance.TickTurnIdx();
     }
 
     eDirection GetDirection(bool north, int chainCount)
@@ -744,53 +778,24 @@ public class BoardCenter : NetworkBehaviour
 
     public BoneCharm RemoveSouthTrack()
     {
-        BoneCharm retval = southCharm;
-        BoneCharm newCharm = southCharm.GetPreviousCharm();
-        //if (newCharm == null) { newCharm = southCharm.GetNextCharm(); }
-        //if (newCharm == null) { newCharm = GetClosestCharm(retval); }
-        if(newCharm == null) { Debug.LogError("White Charm Broke"); }
-        if(newCharm != null)
-            newCharm.RemoveEndCharm(retval);
+        //BoneCharm retval = southCharm;
+        //BoneCharm newCharm = southCharm.GetPreviousCharm();
+        //if(newCharm == null) { Debug.LogError("White Charm Broke"); }
+        //if(newCharm != null)
+        //    newCharm.RemoveEndCharm(retval);
 
-      
-
-
-        //southChain.Remove(retval);
-        //northChain.Remove(retval);
-
-        retval = boardChains.GetSouthEnd(true);
-        newCharm = boardChains.GetSouthEnd(false);
-
-        //BoneCharm retval = southChain.Pop();
-        ////Make new SouthCharm
-        //if(southChain.Count == 0)
-        //{
-        //    BoneCharm[] norths = northChain.ToArray();
-        //    southChain.Push(norths[0]);
-        //    awkwardPlacement = false;
-        //}
+        BoneCharm retval = boardChains.GetSouthEnd(true);
+        BoneCharm newCharm = boardChains.GetSouthEnd(false);
+        
         //southTrackCount--;
-        southTrackCount--;
-        southTrackDirection = prevSouthDir;
+        //southTrackDirection = prevSouthDir;
         UpdateSouthChainDirection();
-        //southTrackDirection = retval.GetCharmDirection();
-        //if ((southTrackDirection == eDirection.eNorth || southTrackDirection == eDirection.eSouth) && southTrackCount < 0)
-        //{
-        //    southTrackDirection = eDirection.eEast;
-        //    southTrackCount = 0;
-        //}
-        //else if ((southTrackDirection == eDirection.eEast || southTrackDirection == eDirection.eWest) && southTrackCount < 0)
-        //{
-        //    southTrackDirection = southVerticalSwitch ? eDirection.eSouth : eDirection.eNorth;
-        //    southTrackCount = 0;
-        //    southVerticalSwitch = !southVerticalSwitch;
-        //}
+
         southCharm = null;
-        UpdateSouthCharm(newCharm);
-        retval.SetNextCharm(null);
-        retval.SetPreviousCharm(null);
-
-
+        UpdateSouthCharm(newCharm, true);
+        //retval.SetNextCharm(null);
+        //retval.SetPreviousCharm(null);
+        
         return retval;
     }
 

@@ -43,7 +43,7 @@ public class BaseHand : NetworkBehaviour
         for(int i = 0; i < myHand.Count; i++)
         {
            // myHand[i].transform.SetParent(handPositionHandler.transform);
-            myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+            //myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
             myHand[i].SetOwnerHand(this);
             myHand[i].UpdateLocation(eLocation.ePlayerHand, playerID);
             if (OverrideReveal())
@@ -62,6 +62,14 @@ public class BaseHand : NetworkBehaviour
         for (int i = 0; i < myHand.Count; i++)
         {
             myHand[i].UpdateBoneCharmSelectedEvent(eventBoneCharm);
+        }
+    }
+
+    public void ClearCharmsSelected()
+    {
+        for (int i = 0; i < myHand.Count; i++)
+        {
+            myHand[i].UpdateBoneCharmSelectedEvent(null);
         }
     }
 
@@ -90,6 +98,37 @@ public class BaseHand : NetworkBehaviour
         }
     }
 
+    //public void AddBoneToHand_ServerRequest(BoneCharm charm)
+    //{
+
+    //    AddBoneToHandServerRpc(charm.GetCharmNetData(), playerID);
+    //}
+
+    //[ServerRpc]
+    //public void AddBoneToHandServerRpc(BoneCharmNetData charmData, ulong handClientID)
+    //{
+    //    Debug.Log("Requesting BoneYard Draw Server Rpc");
+    //    AddBoneToHandClientRpc(charmData, handClientID);
+    //    //BoneCharm charm = BoneCharmManager.instance.GetCharmFromNetData(charmData);
+    //    //if(charm != null)
+    //    //{
+    //    //    AddBoneToHand_FromBoneyard(charm);
+    //    //}
+    //}
+
+    //[ClientRpc]
+    //public void AddBoneToHandClientRpc(BoneCharmNetData charmData, ulong handClientID)
+    //{
+    //    //if (IsServer) { return; }
+    //    Debug.Log("BoneYard Draw Client Rpc");
+
+    //    BoneCharm charm = BoneCharmManager.instance.GetCharmFromNetData(charmData);
+    //    if(charm != null)
+    //    {
+    //        AddBoneToHand_FromBoneyard(charm);
+    //    }
+    //}
+
     public bool GetIsAssigned()
     {
         return isAssigned;
@@ -111,13 +150,13 @@ public class BaseHand : NetworkBehaviour
             ShowDrawHint(false);
             //BoneCharmManager.instance.boneYard.DisplayBoneYardDrawHint(false);
         }
-        PlaceHandPositions(TurnManager.instance.IsItMyTurn(this));
+        PlaceHandPositions();
         onHandUpdate?.Invoke(this);
     }
 
     public virtual bool StartTurn()
     {
-        PlaceHandPositions(true);
+        PlaceHandPositions();
         TurnManager.instance.SetTurnToken(turnTokenPosition);
         if(!HasValidPlay())
         {
@@ -138,7 +177,7 @@ public class BaseHand : NetworkBehaviour
         TurnManager.instance.SetTurnToken(turnTokenPosition);
     }
 
-    public virtual void EndTUrn()
+    public virtual void EndTurn()
     {
         ShowDrawHint(false);
     }
@@ -187,28 +226,14 @@ public class BaseHand : NetworkBehaviour
     public void RemoveCharmFromHand(BoneCharm charm)
     {
         charm.ClearBoneCharmSelectedEvent();
+        charm.SetOwnerHand(null);
         myHand.Remove(charm);
         onHandUpdate?.Invoke(this);
     }
 
-    public void PlaceHandPositions(bool showValidPlays = false)
+    public void PlaceHandPositions()
     {
         handPositionHandler.FitBoneCharmsInBounds(myHand);
-        //for(int i = 0; i < myHand.Count; i++)
-        //{
-        //    Vector3 offset = Vector3.zero;
-        //    if(OverrideReveal() && showValidPlays && TurnManager.instance.IsItMyTurn(this))
-        //    {
-        //        if(BoardCenter.instance.IsCharmValidOnBoard(myHand[i]))
-        //        {
-        //            Vector3 upDir = right ? Vector3.up : Vector3.down;
-        //            offset = upDir * (myHand[i].GetHeight() / 2);
-        //        }
-        //    }
-        //    Vector3 dir = right ? Vector3.right : Vector3.left;
-        //    myHand[i].transform.position = handPosition.position + (dir * i * myHand[i].GetWidth() * xSpacing) + (offset);
-        //    myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
-        //}
     }
 
     public bool ContainsCharmType(eCharmType charmType)
