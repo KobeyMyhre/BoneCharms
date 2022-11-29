@@ -52,21 +52,25 @@ public class GameplayTransitions : MonoBehaviour
 
     IEnumerator AttachBoneCharmToboard(BoneCharm newCharm, BoneCharm prevCharm, Vector3 attachedPosition, eCharmType charmType, bool north)
     {
-        Vector3 startPos = newCharm.transform.position;
+        newCharm.meshObject.transform.position = attachedPosition;
+        Vector3 startPos = newCharm.meshObject.transform.localPosition;
+        Vector3 endPos = Vector3.zero;
         float t = 0;
         while(t < 1)
         {
             t += Time.deltaTime / attachCharmDelay;
-            newCharm.transform.position = Vector3.Lerp(startPos, attachedPosition, attachAnim.Evaluate(t));
+            newCharm.meshObject.transform.localPosition = Vector3.Lerp(startPos, endPos, attachAnim.Evaluate(t));
             yield return null;
         }
         //Snap the BoneCharm Direction?
         //Lerp the BoneCharm to the Attach Point
-        newCharm.transform.position = attachedPosition;
+        newCharm.meshObject.transform.localPosition = Vector3.zero;
+        //newCharm.meshObject.transform.position = attachedPosition;
         BoardCenter.instance.UpdateEndIcons();
         yield return null;
 
-        ResolveBoneCharm(newCharm, prevCharm, charmType, north);
+        if (charmType != eCharmType.eSizeOfCharms && newCharm != null && prevCharm != null)
+            ResolveBoneCharm(newCharm, prevCharm, charmType, north);
 
         //Resolve BoneCharm Effects
     }

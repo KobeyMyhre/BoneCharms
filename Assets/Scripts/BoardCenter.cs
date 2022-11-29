@@ -29,7 +29,7 @@ public class BoardContainer
         if (withRemoval)
         {
             board.RemoveAt(0);
-            if(retval == centerPiece)
+            if(retval.IsBoneCharmEqual(centerPiece))
             {
                 if (board.Count > 0)
                     centerPiece = board[0];
@@ -44,7 +44,7 @@ public class BoardContainer
         if(withRemoval)
         {
             board.RemoveAt(board.Count - 1);
-            if(retval == centerPiece)
+            if(retval.IsBoneCharmEqual(centerPiece))
             {
                 if (board.Count > 0)
                     centerPiece = board[board.Count - 1];
@@ -58,7 +58,7 @@ public class BoardContainer
         int retval = 1;
         for(int i = 0; i < board.Count; i++)
         {
-            if(board[i] == centerPiece)
+            if(board[i].IsBoneCharmEqual(centerPiece))
             {
                 return retval;
             }
@@ -76,7 +76,7 @@ public class BoardContainer
         int retval = 1;
         for(int i = board.Count - 1; i >= 0; i--)
         {
-            if (board[i] == centerPiece)
+            if (board[i].IsBoneCharmEqual(centerPiece))
             {
                 return retval;
             }
@@ -263,8 +263,6 @@ public class BoardCenter : NetworkBehaviour
         if (boardChains.IsBoardEmpty())
         {
             PlayBoneCharm(newCharm, ownerHand, true, clientID);
-
-            
         }
         else
         {
@@ -291,6 +289,7 @@ public class BoardCenter : NetworkBehaviour
             {
                 Debug.Log("Server Rpc Play BoneCharm");
                 ownerHand.RemoveCharmFromHand(playedCharm);
+                playedCharm.UpdateLocation(eLocation.eBoard);
                 if (boardChains.IsBoardEmpty())
                 {
                     PlayBoneCharm(playedCharm, ownerHand, true, clientID);
@@ -347,10 +346,12 @@ public class BoardCenter : NetworkBehaviour
         {
             originHand.RemoveCharmFromHand(newCharm);
             //First Play
+            Vector3 oldPos = newCharm.transform.position;
             newCharm.transform.position = ConvertToConsistentBoardZ(transform.position);
             //newCharm.transform.SetParent(boardScalar);
             newCharm.transform.localRotation = Quaternion.identity;
             newCharm.transform.localScale = Vector3.one;
+            GameplayTransitions.instance.PlayBoneCharmOnBoard(newCharm, null, oldPos, eCharmType.eSizeOfCharms, true);
             
             //newCharm.ClearBoneCharmSelectedEvent();
             UpdateNorthCharm(newCharm);
@@ -373,14 +374,12 @@ public class BoardCenter : NetworkBehaviour
                 {
                     originHand.RemoveCharmFromHand(newCharm);
                     PlaceNewNorthTile(newCharm, clientID);
-                    //PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(newCharm), (int)originHand.playerID, true);
                     return true;
                 }
                 if (types[i] == GetSouthType() && !northTrack)
                 {
                     originHand.RemoveCharmFromHand(newCharm);
                     PlaceNewSouthTile(newCharm, clientID);
-                    //PlayBoneCharmClientRpc(BoneCharmManager.GetNetDataFromCharm(newCharm), (int)originHand.playerID, false);
                     return true;
                 }
             }
@@ -517,7 +516,11 @@ public class BoardCenter : NetworkBehaviour
         newCharm.transform.localScale = Vector3.one;
         Vector3 newPos = northCharm.GetAttachPosition(northTrackDirection, newCharm);
         newPos = ConvertToConsistentBoardZ(newPos);
+        Vector3 oldPos = newCharm.transform.position;
         newCharm.transform.position = ConvertToConsistentBoardZ(newPos);
+
+        eCharmType resolveType = northType.Value;
+        GameplayTransitions.instance.PlayBoneCharmOnBoard(newCharm, northCharm, newPos, resolveType, true);
 
         newCharm.ClearBoneCharmSelectedEvent();
         newCharm.SetOrientation(northTrackDirection);
@@ -529,7 +532,7 @@ public class BoardCenter : NetworkBehaviour
 
         //if (!IsServer) { return; }
         //Wrap some of this into a UpdateEndType/Icon Func
-        eCharmType resolveType = northType.Value;
+        
         BoneCharm previousCharm = northCharm;
         UpdateNorthCharm(newCharm);
 
@@ -668,8 +671,11 @@ public class BoardCenter : NetworkBehaviour
         newCharm.transform.localRotation = Quaternion.identity;
         Vector3 newPos = southCharm.GetAttachPosition(southTrackDirection, newCharm);
         newPos = ConvertToConsistentBoardZ(newPos);
+        Vector3 oldPos = newCharm.transform.position;
         newCharm.transform.position = ConvertToConsistentBoardZ(newPos);
 
+        eCharmType resolveType = southType.Value;
+        GameplayTransitions.instance.PlayBoneCharmOnBoard(newCharm, southCharm, oldPos, resolveType, false);
         newCharm.ClearBoneCharmSelectedEvent();
         newCharm.SetOrientation(southTrackDirection);
 
@@ -679,26 +685,11 @@ public class BoardCenter : NetworkBehaviour
             newCharm.RotateToMatch(false);
         }
 
-        //if (boardChains.GetSouthCount() <= 1) //The first awkward south placement, Need a better way to do this
-        //{
-        //    if (newCharm.botCharmType != southCharm.botCharmType)
-        //    {
-        //        newCharm.RotateToMatch(false);
-        //    }
-        //    awkwardPlacement = true;
-        //}
-        //else
-        //{
-        //    if (!newCharm.IsMatching(southCharm, GetSouthType()))
-        //    {
-        //        newCharm.RotateToMatch(false);
-        //    }
-        //}
+        
 
 
 
         //Rotate to proper Position
-        eCharmType resolveType = southType.Value;
         BoneCharm previousCharm = southCharm;
         UpdateSouthCharm(newCharm);
 

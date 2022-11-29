@@ -383,9 +383,10 @@ public class TurnManager : NetworkBehaviour
 
         if (!IsServer) { turnIdx = playerIdx; }
         Debug.Log("Client Rpc Pass Turn To: " + playerIdx);
+        BoneCharmManager.instance.boneYard.OnTurnUpdate(players[playerIdx]);
         if (playerIdx == GetPlayerIdx(NetworkManager.Singleton.LocalClientId))
         {
-            BoneCharmManager.instance.boneYard.OnTurnUpdate(players[playerIdx]);
+            //BoneCharmManager.instance.boneYard.OnTurnUpdate(players[playerIdx]);
             players[playerIdx].playerHand.StartTurn();
             Debug.Log("Im taking the next turn");
         }

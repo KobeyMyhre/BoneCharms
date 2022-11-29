@@ -171,6 +171,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 455b3cb80ffe8974d9d00cd973c98133, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  meshObject: {fileID: 5755438733455699723}
   rotator: {fileID: 4751712309877994520}
   backdropRender: {fileID: 664586820340955754}
   charmMesh: {fileID: 6131119741367671095}
@@ -16000,6 +16001,12 @@ PrefabInstance:
 --- !u!4 &4941783204422415793 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: a536d4760e03f8441abe07ca47b86270,
+    type: 3}
+  m_PrefabInstance: {fileID: 4836308380805730906}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1 &5755438733455699723 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: a536d4760e03f8441abe07ca47b86270,
     type: 3}
   m_PrefabInstance: {fileID: 4836308380805730906}
   m_PrefabAsset: {fileID: 0}

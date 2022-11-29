@@ -58,6 +58,7 @@ public class BoneYard : NetworkBehaviour
         boneCharm.transform.localScale = Vector3.one;
         boneCharm.SetRevealedState(false);
         boneCharm.SetOrientation(BoardCenter.eDirection.eNorth);
+        boneCharm.UpdateLocation(eLocation.eBoneYard);
         boneYard.Add(boneCharm);
         if (duringGame)
         {
@@ -207,7 +208,8 @@ public class BoneYard : NetworkBehaviour
     {
         BoneCharm charm = BoneCharmManager.instance.GetCharmFromNetData(charmData);
         BaseHand playerHand = TurnManager.instance.GetPlayerHandFromID(handClientID);
-        if(charm && playerHand)
+        RemoveBoneCharm(charm);
+        if (charm && playerHand)
         {
             playerHand.AddBoneToHand_FromBoneyard(charm);
         }
@@ -353,7 +355,7 @@ public class BoneYard : NetworkBehaviour
         //        break;
         //    }
         //}
-        List<BoneCharm> HiddenCharms = GetRandomNonRevealedCharms(2, false);
+        List<BoneCharm> HiddenCharms = GetRandomNonRevealedCharms(amount, false);
         for(int i = 0; i < HiddenCharms.Count; i++)
         {
             if(HiddenCharms[i] != null)

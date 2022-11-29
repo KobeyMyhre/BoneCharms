@@ -207,6 +207,9 @@ public class BoneCharmManager : NetworkBehaviour
                 handB.RemoveCharmFromHand(swapB);
                 boneYard.RemoveBoneCharm(swapA);
 
+                swapA.SetRevealedState();
+                swapB.SetRevealedState();
+
                 handB.AddBoneToHand(swapA);
                 boneYard.AddBoneCharmToBoneYard(swapB);
             }
@@ -218,6 +221,9 @@ public class BoneCharmManager : NetworkBehaviour
                 handA.RemoveCharmFromHand(swapA);
                 boneYard.RemoveBoneCharm(swapB);
 
+                swapA.SetRevealedState();
+                swapB.SetRevealedState();
+
                 handA.AddBoneToHand(swapB);
                 boneYard.AddBoneCharmToBoneYard(swapA);
             }
@@ -228,6 +234,7 @@ public class BoneCharmManager : NetworkBehaviour
             {
                 handA.RemoveCharmFromHand(swapA);
                 handB.RemoveCharmFromHand(swapB);
+
                 swapA.SetRevealedState();
                 swapB.SetRevealedState();
 
@@ -267,17 +274,21 @@ public class BoneCharmManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void PurpleCharmServerRpc(ulong clientID)
     {
-        PurpleCharmClientRpc(clientID);
+        BoneCharm newCharm = boneYard.GetRandomBoneCharm();
+        if(newCharm != null)
+        {
+            PurpleCharmClientRpc(newCharm.GetCharmNetData(), clientID);
+        }
         GameplayTransitions.instance.PassTurn();
     }
 
     [ClientRpc]
-    public void PurpleCharmClientRpc(ulong clientID)
+    public void PurpleCharmClientRpc(BoneCharmNetData charmData, ulong clientID)
     {
         BaseHand targetHand = TurnManager.instance.GetPlayerHandFromID(clientID);
         if(targetHand != null)
         {
-            BoneCharm newCharm = boneYard.GetRandomBoneCharm();
+            BoneCharm newCharm = GetCharmFromNetData(charmData);
             if (newCharm != null)
             {
                 newCharm.PlayTargettedAoE(eCharmType.ePurpleCharm);
@@ -313,6 +324,7 @@ public class BoneCharmManager : NetworkBehaviour
                 //effectTargetting.InitiateSelectPlayerUI(charmType);
                 break;
             case eCharmType.eWhiteCharm:
+                //GameplayTransitions.instance.PassTurn(false);
                 WhiteCharmClientRpc(north);
                 break;
             case eCharmType.eBlueCharm:

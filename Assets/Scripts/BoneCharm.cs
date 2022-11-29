@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Unity.Netcode;
+using System;
 
 
 public enum eCharmType
@@ -38,13 +39,30 @@ public class LocationData
     public ulong playerID;
 }
 
+//maybe something like this to figure out the non connected end?
+[System.Serializable]
+public class BoneCharmCharmTypeEnd
+{
+    public eCharmType charmType;
+    public SpriteRenderer spriteRenderer;
+    public bool isConnected = false;
+}
+
+public enum eAttached
+{
+    topIsAttached,
+    botIsAttached,
+    noAttach
+}
+//
 
 public class BoneCharm : NetworkBehaviour
 {
     BaseHand myHand;
     //public LocationData location;
-
+    public GameObject meshObject;
     public Transform rotator;
+    bool isSwapped = false;
     public SpriteRenderer backdropRender;
     public MeshRenderer charmMesh;
     public Sprite revealedBackdrop;
@@ -219,6 +237,7 @@ public class BoneCharm : NetworkBehaviour
 
         botSprite.sprite = BoneCharmManager.instance.GetBoneCharmSprite(topCharmType.Value);
         botSprite.color = BoneCharmManager.instance.GetBoneCharmColor(topCharmType.Value);
+        isSwapped = true;
     }
 
     public void RotateToDouble(bool vertical)
@@ -366,6 +385,7 @@ public class BoneCharm : NetworkBehaviour
 
     public eCharmType GetNotType(eCharmType charmType)
     {
+        if (IsDouble()) { return topCharmType.Value; }
         if(topCharmType.Value == charmType) { return botCharmType.Value; }
         if(botCharmType.Value == charmType) { return topCharmType.Value;}
         return eCharmType.eSizeOfCharms;
@@ -528,12 +548,12 @@ public class BoneCharm : NetworkBehaviour
         //return transform.position;
     }
 
-    public void UpdateLocation(eLocation newLocation, ulong handID)
+    public void UpdateLocation(eLocation newLocation, int handID = -1)
     {
         if (IsServer)
         {
             charmLocation.Value = newLocation;
-            playerID.Value = (int)handID;
+            playerID.Value = handID;
         }
 
         //switch (newLocation)
@@ -573,13 +593,27 @@ public class BoneCharm : NetworkBehaviour
 
     public void PlayResolveEffect(eCharmType charmType)
     {
-        if(topCharmType.Value == charmType)
+        if (isSwapped)
         {
-            resolvedEffect.transform.position = topSprite.transform.position;
+            if (topCharmType.Value == charmType)
+            {
+                resolvedEffect.transform.position = botSprite.transform.position;
+            }
+            else
+            {
+                resolvedEffect.transform.position = topSprite.transform.position;
+            }
         }
         else
         {
-            resolvedEffect.transform.position = botSprite.transform.position;
+            if (topCharmType.Value == charmType)
+            {
+                resolvedEffect.transform.position = topSprite.transform.position;
+            }
+            else
+            {
+                resolvedEffect.transform.position = botSprite.transform.position;
+            }
         }
 
         ParticleSystem.MainModule settings = resolvedEffect.main;
@@ -640,5 +674,15 @@ public class BoneCharm : NetworkBehaviour
     public BoneCharmNetData GetCharmNetData()
     {
         return new BoneCharmNetData(this);
+    }
+
+    public bool IsBoneCharmEqual(BoneCharm other)
+    {
+        if(topCharmType.Value == other.topCharmType.Value &&
+            botCharmType.Value == other.botCharmType.Value)
+        {
+            return true;
+        }
+        return false;
     }
 }

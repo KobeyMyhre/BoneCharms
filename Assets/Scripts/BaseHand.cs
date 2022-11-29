@@ -45,7 +45,7 @@ public class BaseHand : NetworkBehaviour
            // myHand[i].transform.SetParent(handPositionHandler.transform);
             //myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
             myHand[i].SetOwnerHand(this);
-            myHand[i].UpdateLocation(eLocation.ePlayerHand, playerID);
+            myHand[i].UpdateLocation(eLocation.ePlayerHand, (int)playerID);
             if (OverrideReveal())
             {
                 myHand[i].SetFlipOverride();
@@ -89,7 +89,6 @@ public class BaseHand : NetworkBehaviour
 
     public void AddBoneToHand_FromBoneyard(BoneCharm charm)
     {
-        BoneCharmManager.instance.boneYard.RemoveBoneCharm(charm);
         AddBoneToHand(charm);
         if(!HasValidPlay() && BoneCharmManager.instance.boneYard.IsEmpty()) //No Valid Moves
         {
@@ -139,7 +138,8 @@ public class BaseHand : NetworkBehaviour
         myHand.Add(charm);
         //charm.transform.SetParent(handPositionHandler.transform);
         charm.transform.localRotation = Quaternion.identity;
-        charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+        //charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+        charm.UpdateLocation(eLocation.ePlayerHand, (int)playerID);
         charm.SetOwnerHand(this);
         if (OverrideReveal())
         {
@@ -264,7 +264,7 @@ public class BaseHand : NetworkBehaviour
     //    }
     //}
 
-    void PlayCharmFromHand(BoneCharm charm)
+    protected void PlayCharmFromHand(BoneCharm charm)
     {
         BoneCharmDragAndDrop.instance.SetDragTarget(charm, this);
         //This is usually wrong on the client?

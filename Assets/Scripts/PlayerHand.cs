@@ -30,6 +30,7 @@ public class PlayerHand : BaseHand
     public override void AddBoneToHand(BoneCharm charm)
     {
         base.AddBoneToHand(charm);
+        charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
         if (TurnManager.instance.IsItMyTurn(this))
         {
             HighlightPlayables();
