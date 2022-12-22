@@ -80,7 +80,9 @@ public class LobbyHandler : NetworkBehaviour
                     onReadyUp += playerConnections[i].player.ReadyButton;
                     onNotReadyUp += playerConnections[i].player.NotReadyButton;
                 }
-                
+                playerConnections[i].displayHolder.transform.localScale = Vector3.one;
+                playerConnections[i].displayHolder.localPosition = Vector3.zero;
+
                 //GameObject newBaby = Instantiate(lobbyDisplayPrefab.gameObject, playerConnections[i].displayHolder);
 
                 //NetworkObject newNetworkBaby = newBaby.GetComponent<NetworkObject>();
@@ -152,7 +154,8 @@ public class LobbyHandler : NetworkBehaviour
                     onNotReadyUp += playerConnections[stateIndex].player.NotReadyButton;
                 }
             }
-
+            playerConnections[stateIndex].displayHolder.transform.localScale = Vector3.one;
+            playerConnections[stateIndex].displayHolder.localPosition = Vector3.zero;
         }
     }
 
@@ -160,7 +163,7 @@ public class LobbyHandler : NetworkBehaviour
     {
         PlayerReadyClientRpc(clientID, playerID);
 
-        UpdateReadyButtons(false);
+        //UpdateReadyButtons(false);
 
         StartGameTimer();
     }
@@ -175,7 +178,7 @@ public class LobbyHandler : NetworkBehaviour
 
             if (clientID == NetworkManager.Singleton.LocalClientId)
             {
-
+                UpdateReadyButtons(false);
             }
             else
             {
@@ -196,7 +199,7 @@ public class LobbyHandler : NetworkBehaviour
     public void PlayerNotReady(ulong clientID, bool isDisonnected = false)
     {
         int playerID = GetPlayerIdx(clientID);
-        UpdateReadyButtons(true);
+        //UpdateReadyButtons(true);
         //Stop Timer
 
         if(isDisonnected)
@@ -214,6 +217,10 @@ public class LobbyHandler : NetworkBehaviour
     {
         playerConnections[playerID].playerState = ConnectionState.connected;
         playerConnections[playerID].lobbyDisplay.DisplayReadyUp(false);
+        if (clientID == NetworkManager.Singleton.LocalClientId)
+        {
+            UpdateReadyButtons(true);
+        }
     }
 
 

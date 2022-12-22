@@ -145,34 +145,34 @@ public class BoneCharmManager : NetworkBehaviour
 
     public void UpdateBoneCharmPositions()
     {
-        int boneYardCount = 0;
-        for(int i = 0; i < boneCharmSet.Count; i++)
-        {
-            switch (boneCharmSet[i].charmLocation.Value)
-            {
-                case eLocation.eBoneYard:
-                    boneYard.UpdateBoneCharmPosition_BoneYard(boneCharmSet[i], boneYardCount);
-                    boneYardCount++;
-                    break;
-                case eLocation.ePlayerHand:
-                    BaseHand ownerHand = TurnManager.instance.GetPlayerHandFromID((ulong)boneCharmSet[i].playerID.Value);
-                    if(ownerHand != null)
-                    {
-                        //Place Here
-                    }
-                    break;
-                case eLocation.eBoard:
+        //int boneYardCount = 0;
+        //for(int i = 0; i < boneCharmSet.Count; i++)
+        //{
+        //    switch (boneCharmSet[i].charmLocation.Value)
+        //    {
+        //        case eLocation.eBoneYard:
+        //            boneYard.UpdateBoneCharmPosition_BoneYard(boneCharmSet[i], boneYardCount);
+        //            boneYardCount++;
+        //            break;
+        //        case eLocation.ePlayerHand:
+        //            BaseHand ownerHand = TurnManager.instance.GetPlayerHandFromID((ulong)boneCharmSet[i].playerID.Value);
+        //            if(ownerHand != null)
+        //            {
+        //                //Place Here
+        //            }
+        //            break;
+        //        case eLocation.eBoard:
 
-                    break;
-            }
-        }
+        //            break;
+        //    }
+        //}
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void ResolveBoneCharmEffectServerRpc(BoneCharmNetData netDataA, BoneCharmNetData netDataB, eCharmType charmType, bool north, ulong targetOpponentID)
-    {
-        ResolveBoneCharmEffectClientRpc(netDataA, netDataB, charmType, north, targetOpponentID);
-    }
+    //[ServerRpc(RequireOwnership = false)]
+    //public void ResolveBoneCharmEffectServerRpc(BoneCharmNetData netDataA, BoneCharmNetData netDataB, eCharmType charmType, bool north, ulong targetOpponentID)
+    //{
+    //    ResolveBoneCharmEffectClientRpc(netDataA, netDataB, charmType, north, targetOpponentID);
+    //}
 
     [ServerRpc(RequireOwnership = false)]
     public void GreenCharmServerRpc(ulong clientID)
@@ -200,7 +200,8 @@ public class BoneCharmManager : NetworkBehaviour
 
         BaseHand handA = swapA.GetOwnerHand();
         BaseHand handB = swapB.GetOwnerHand();
-        if(handA == null)
+
+        if(handA == null && swapA.charmLocation.Value == eLocation.eBoneYard)
         {
             if(handB != null)
             {
@@ -214,7 +215,7 @@ public class BoneCharmManager : NetworkBehaviour
                 boneYard.AddBoneCharmToBoneYard(swapB);
             }
         }
-        else if(handB == null)
+        else if(handB == null && swapB.charmLocation.Value == eLocation.eBoneYard)
         {
             if(handA != null)
             {
@@ -228,7 +229,8 @@ public class BoneCharmManager : NetworkBehaviour
                 boneYard.AddBoneCharmToBoneYard(swapA);
             }
         }
-        else
+        else if(swapA.charmLocation.Value == eLocation.ePlayerHand &&
+                swapB.charmLocation.Value == eLocation.ePlayerHand)
         {
             if(handA != null && handB != null)
             {
@@ -292,6 +294,7 @@ public class BoneCharmManager : NetworkBehaviour
             if (newCharm != null)
             {
                 newCharm.PlayTargettedAoE(eCharmType.ePurpleCharm);
+                boneYard.RemoveBoneCharm(newCharm);
                 targetHand.AddBoneToHand(newCharm);
             }
         }
@@ -299,7 +302,7 @@ public class BoneCharmManager : NetworkBehaviour
     }
 
 
-    [ServerRpc]
+    [ServerRpc()]
     public void RequestBoneCharmResolutionServerRpc(eCharmType charmType, bool north, ulong clientID)
     {
         switch (charmType)
@@ -360,44 +363,23 @@ public class BoneCharmManager : NetworkBehaviour
 
     public void ResolveBoneCharmEffect(eCharmType charmType, bool north, ulong clientID)
     {
-        RequestBoneCharmResolutionServerRpc(charmType, north, clientID);
+        if(IsServer)
+            RequestBoneCharmResolutionServerRpc(charmType, north, clientID);
 
-        //if(TurnManager.instance.GetActivePlayerHand() is PlayerHand)
-        //{
-        //    if (charmType == eCharmType.eGreenCharm || charmType == eCharmType.ePurpleCharm)
-        //    {
-        //        effectTargetting.InitiateSelectPlayerUI(null, null, charmType, north);
-        //        return;
-        //    }
-        //    if (charmType == eCharmType.eYellowCharm)
-        //    {
-        //        effectTargetting.InitiateSelectBoneCharmUI(null, null, charmType, north);
-        //        return;
-        //    }
-        //}
-
-        //ResolveBoneCharmEffectServerRpc(new BoneCharmNetData(), new BoneCharmNetData(), charmType, north, 999);
+        
     }
 
-    [ClientRpc]
-    public void ResolveBoneCharmEffectClientRpc(BoneCharmNetData netDataA, BoneCharmNetData netDataB, eCharmType charmType, bool north, ulong targetOpponentID)
-    {
-        BoneCharm charmA = GetCharmFromNetData(netDataA);
-        BoneCharm charmB = GetCharmFromNetData(netDataB);
-        BaseHand targetOpponent = TurnManager.instance.GetPlayerHandFromID(targetOpponentID);
-        ResolveBoneCharmEffect(charmA, charmB, charmType, north, targetOpponent);
-    }
+    //[ClientRpc]
+    //public void ResolveBoneCharmEffectClientRpc(BoneCharmNetData netDataA, BoneCharmNetData netDataB, eCharmType charmType, bool north, ulong targetOpponentID)
+    //{
+    //    BoneCharm charmA = GetCharmFromNetData(netDataA);
+    //    BoneCharm charmB = GetCharmFromNetData(netDataB);
+    //    BaseHand targetOpponent = TurnManager.instance.GetPlayerHandFromID(targetOpponentID);
+    //    ResolveBoneCharmEffect(charmA, charmB, charmType, north, targetOpponent);
+    //}
 
     public void ResolveBoneCharmEffect(BoneCharm charmA, BoneCharm charmB, eCharmType charmType, bool north, BaseHand targetOpponent)
     {
-        //if(charmA != null)
-        //{
-        //    charmA.PlayResolveEffect(charmType);
-        //}
-        //if(charmB != null)
-        //{
-        //    charmB.PlayResolveEffect(charmType);
-        //}
         bool blueCharm = false;
         //List<BaseHand> opponents;
         int r;
@@ -463,7 +445,7 @@ public class BoneCharmManager : NetworkBehaviour
                 }
                 else //AI Version
                 {
-                    BoneCharm swapCharmBoneYard = boneYard.GetRandomBoneCharm();
+                    BoneCharm swapCharmBoneYard = boneYard.RemoveRandomBoneCharm();
                     if (swapCharmBoneYard != null)
                     {
                         BoneCharm swapCharmHand = targetOpponent.GetRandomCharm();
@@ -511,7 +493,7 @@ public class BoneCharmManager : NetworkBehaviour
                 break;
             case eCharmType.ePurpleCharm:
                 break;
-                BoneCharm newCharm = boneYard.GetRandomBoneCharm();
+                BoneCharm newCharm = boneYard.RemoveRandomBoneCharm();
                 if(newCharm != null)
                 {
                     newCharm.PlayTargettedAoE(charmType);

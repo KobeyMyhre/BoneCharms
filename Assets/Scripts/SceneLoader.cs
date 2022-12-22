@@ -12,7 +12,8 @@ public enum eScenes
     StartUp,
     MainMenu,
     Lobby,
-    BoneCharmsMultiplayer
+    BoneCharmsMultiplayer,
+    GameplayRoundCleanUp
 
 }
 

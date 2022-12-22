@@ -55,6 +55,11 @@ public class BCPlayerInLobby : NetworkBehaviour
         roundPoints.Value += myHand.myHand.Count;
     }
 
+    public string GetPlayerName()
+    {
+        return string.Format("BC_{0}", playerID.Value);
+    }
+
     public override void OnDestroy()
     {
         base.OnDestroy();

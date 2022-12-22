@@ -88,5 +88,7 @@ public class GameplayTransitions : MonoBehaviour
 
 
         TurnManager.instance.TickTurnIdx(blueCharm);
+
+
     }
 }

@@ -7,12 +7,13 @@ using TMPro;
 public class BaseHand : NetworkBehaviour
 {
     public BoneCharm prefab;
-
+    public BoardCenter.eDirection charmDirection;
     public ulong playerID;
     //public float xSpacing;
     //public float ySpacing;
     //public bool right = true;
     public TextMeshPro nameText;
+    public TextMeshPro scoreText;
     public GameObject drawHint;
     //public Transform handPosition;
     public BoundedTransformHolder handPositionHandler;
@@ -36,14 +37,19 @@ public class BaseHand : NetworkBehaviour
         nameText.text = text;
     }
 
+    public void SetScoreText(int score)
+    {
+        scoreText.text = score.ToString();
+    }
+
     public void InitHand(List<BoneCharm> charms)
     {
-        isAssigned = true;
         myHand = charms;
         for(int i = 0; i < myHand.Count; i++)
         {
-           // myHand[i].transform.SetParent(handPositionHandler.transform);
+            // myHand[i].transform.SetParent(handPositionHandler.transform);
             //myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+            myHand[i].SetOrientation(charmDirection);
             myHand[i].SetOwnerHand(this);
             myHand[i].UpdateLocation(eLocation.ePlayerHand, (int)playerID);
             if (OverrideReveal())
@@ -73,12 +79,9 @@ public class BaseHand : NetworkBehaviour
         }
     }
 
-    public void UpdateCharmsInHandToPlayOnSelect()
+    public virtual void UpdateCharmsInHandToPlayOnSelect()
     {
-        for (int i = 0; i < myHand.Count; i++)
-        {
-            myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
-        }
+       
     }
 
     protected virtual bool OverrideReveal()
@@ -133,11 +136,16 @@ public class BaseHand : NetworkBehaviour
         return isAssigned;
     }
 
+    public void SetIsAssigned(bool val)
+    {
+        isAssigned = val;
+    }
+
     public virtual void AddBoneToHand(BoneCharm charm)
     {
         myHand.Add(charm);
         //charm.transform.SetParent(handPositionHandler.transform);
-        charm.transform.localRotation = Quaternion.identity;
+        charm.SetOrientation(charmDirection);
         //charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
         charm.UpdateLocation(eLocation.ePlayerHand, (int)playerID);
         charm.SetOwnerHand(this);

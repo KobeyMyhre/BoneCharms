@@ -97,6 +97,14 @@ public class EffectTargettingHandler : MonoBehaviour
                 }
                 selectBoneCharmUI.SetActive(false);
             }
+            else if(swapCharms.Count > 2)
+            {
+                for (int i = 0; i < swapCharms.Count; i++)
+                {
+                    RemoveBoneCharmFromSwap(swapCharms[i]);
+                    i--;
+                }
+            }
             else
             {
                 charm.UpdateBoneCharmSelectedEvent(RemoveBoneCharmFromSwap);

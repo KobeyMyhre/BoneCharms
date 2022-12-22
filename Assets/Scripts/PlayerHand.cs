@@ -37,6 +37,14 @@ public class PlayerHand : BaseHand
         }
     }
 
+    public override void UpdateCharmsInHandToPlayOnSelect()
+    {
+        for (int i = 0; i < myHand.Count; i++)
+        {
+            myHand[i].UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+        }
+    }
+
     public override void EndTurn()
     {
         base.EndTurn();

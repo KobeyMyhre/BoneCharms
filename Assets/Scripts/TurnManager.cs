@@ -26,7 +26,7 @@ public class TurnManager : NetworkBehaviour
     public List<PlayerUI> playerUIs;
     [SerializeField]
     private List<BC_Player> players = new List<BC_Player>();
-    public GameObject turnToken;
+    public TokenMover turnToken;
     public int turnIdx = 0; //Set this equal to the player who pulled the double
     public bool takeTurns;
     public int totalRounds = 3;
@@ -69,6 +69,7 @@ public class TurnManager : NetworkBehaviour
         {
             if (!otherHands[i].GetIsAssigned())
             {
+                otherHands[i].SetIsAssigned(true);
                 return otherHands[i];
             }
         }
@@ -98,7 +99,8 @@ public class TurnManager : NetworkBehaviour
                 newPlayer.playerUI.SetUpPlayerUI(newPlayer.playerHand);
             }
             newPlayer.playerHand.playerID = newPlayer.clientID;
-            newPlayer.playerHand.SetNameText(string.Format("BC_{0}", newPlayer.clientID));
+            newPlayer.playerHand.SetNameText(p.GetPlayerName());
+            newPlayer.playerHand.SetScoreText(p.roundPoints.Value);
             //PlayerUI myUI = GetOtherPlayersUI();
             //myUI.SetUpPlayerUI(newPlayer.playerHand);
             //newPlayer.playerUI = myUI;
@@ -136,7 +138,8 @@ public class TurnManager : NetworkBehaviour
                 newPlayer.playerUI.SetUpPlayerUI(newPlayer.playerHand);
             }
             newPlayer.playerHand.playerID = newPlayer.clientID;
-            newPlayer.playerHand.SetNameText(string.Format("BC_{0}", newPlayer.clientID));
+            newPlayer.playerHand.SetNameText(p.GetPlayerName());
+            newPlayer.playerHand.SetScoreText(p.roundPoints.Value);
             //PlayerUI myUI = GetOtherPlayersUI();
             //myUI.SetUpPlayerUI(newPlayer.playerHand);
             //newPlayer.playerUI = myUI;
@@ -319,7 +322,21 @@ public class TurnManager : NetworkBehaviour
         else
         {
             SetTurnToken(players[playerIdx].playerHand.turnTokenPosition);
+            
         }
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (i != playerIdx && players[i].playerHand != null)
+            {
+                players[i].playerHand.PlaceHandPositions();
+            }
+        }
+    }
+
+    [ClientRpc]
+    public void DisplayMidRoundResultsClientRpc(PlayerRoundScore[] bcPlayers, int currentRound)
+    {
+        resultsDisplay.ShowMidRoundResults(bcPlayers, currentRound);
     }
 
     [ClientRpc]
@@ -355,7 +372,15 @@ public class TurnManager : NetworkBehaviour
             }
             //players[winner].score++;
             //resultsDisplay.ShowResults(players[winner].isMe);
-            DisplayWinnerClientRpc(players[winner].clientID);
+            if (BCPlayersInGame.instance.IsMatchOver())
+            {
+                DisplayWinnerClientRpc(players[winner].clientID);
+            }
+            else
+            {
+                DisplayMidRoundResultsClientRpc(BCPlayersInGame.instance.GetRoundScoreDate(), BCPlayersInGame.instance.currentRound.Value);
+            }
+
             return;
         }
 
@@ -410,6 +435,11 @@ public class TurnManager : NetworkBehaviour
         }
     }
 
+    public GameObject GetPassTurnToken()
+    {
+        return turnToken.gameObject;
+    }
+
     public int GetPlayerIdx(ulong clientID)
     {
         for(int i = 0; i < players.Count; i++)
@@ -428,14 +458,35 @@ public class TurnManager : NetworkBehaviour
 
     public void SetTurnToken(Transform handTokenPosition)
     {
-        turnToken.SetActive(true);
+        turnToken.gameObject.SetActive(true);
         //turnToken.transform.SetParent(handTokenPosition);
-        turnToken.transform.position = handTokenPosition.position;
+        //turnToken.transform.position = handTokenPosition.position;
+        turnToken.MoveToNewTarget(handTokenPosition.position);
     }
 
     public void HideTurnToken()
     {
-        turnToken.SetActive(false);
+        turnToken.gameObject.SetActive(false);
+    }
+
+    public void EndGameSession()
+    {
+        if(!NetworkManager.Singleton.IsServer) { return; }
+        Debug.Log("Final Round Over");
+        //TellClientsToGoHomeClientRpc();
+        SceneLoader.instance.LoadSceneNetworked(eScenes.GameplayRoundCleanUp);
+    }
+
+    [ClientRpc]
+    public void TellClientsToGoHomeClientRpc()
+    {
+        //if (NetworkManager.Singleton.IsServer) { return; }
+        Debug.Log("Exit Game on Client");
+        if (SceneLoader.instance)
+        {
+            SceneLoader.instance.LoadSceneNetworked(eScenes.GameplayRoundCleanUp);
+            //NetworkManager.Singleton.Shutdown();
+        }
     }
 
     int CheckForGameOver()

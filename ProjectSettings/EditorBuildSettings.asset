@@ -18,6 +18,9 @@ EditorBuildSettings:
     path: Assets/Scenes/BoneCharmsMultiPlayer.unity
     guid: 679837fc398944a4b8569cc54c3bdfbb
   - enabled: 1
+    path: Assets/Scenes/GameplayRoundCleanUp.unity
+    guid: 7699529af6f4858448b70bc90221ed6a
+  - enabled: 1
     path: Assets/Scenes/NetworkTesting.unity
     guid: ee902fc6bbfcac146839de0a5cbaa56e
   m_configObjects: {}

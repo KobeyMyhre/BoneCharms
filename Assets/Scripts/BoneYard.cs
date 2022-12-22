@@ -7,6 +7,7 @@ public class BoneYard : NetworkBehaviour
 {
     //public float radius;
     public BoneCharm prefab;
+    public LayerMask charmLayer;
     public BoneYardUI boneYardUI;
     public float xSpacing;
     public float ySpacing;
@@ -68,6 +69,7 @@ public class BoneYard : NetworkBehaviour
             //boneCharm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_ServerRequest);
             boneCharm.UpdateBoneCharmSelectedEvent(AddBoneToPlayerHandRequest);
             MoveBoneYardToCorners();
+            //MoveCharmToBoneYardCorner(boneCharm);
             ShuffleBoneYard();
         }
         else
@@ -149,7 +151,7 @@ public class BoneYard : NetworkBehaviour
     {
         SetIsInDraft(false);
         ClearBoneYardSelectedEvents();
-        EndDraftClientRpc();
+        
         //End Draft
         List<BoneCharm> firstPlayerHand = GetInitialHand(4);
         //Add Double to Player Hand
@@ -170,13 +172,12 @@ public class BoneYard : NetworkBehaviour
         }
 
         //TurnManager.instance.StartTurns(firstPlayer);
-        
 
 
+        EndDraftClientRpc();
 
         // DisplayBoneYard(false);
-        boneYardUI.UpdateBoneYardUI(this);
-        MoveBoneYardToCorners();
+        //MoveBoneYardToCorners();
 
         //UpdateCharmsInYardToDrawOnSelect();
         Debug.Log("End Draft");
@@ -188,6 +189,7 @@ public class BoneYard : NetworkBehaviour
     {
         SetIsInDraft(false);
         MoveBoneYardToCorners();
+        boneYardUI.UpdateBoneYardUI(this);
         //ClearBoneYardSelectedEvents();
         Debug.Log("End Draft Client Rpc");
     }
@@ -241,17 +243,27 @@ public class BoneYard : NetworkBehaviour
             if(i < cornerSpots.Count)
             {
                 //boneYard[i].transform.SetParent(cornerSpots[i]);
-                boneYard[i].transform.position = cornerSpots[i].position;
+                boneYard[i].UpdateBoneCharmPosition(cornerSpots[i].position);
                 boneYard[i].transform.localRotation = Quaternion.identity;
             }
         }
+    }
 
+    void MoveCharmToBoneYardCorner(BoneCharm charmToPlace)
+    {
+        for(int i = 0; i < cornerSpots.Count; i++)
+        {
+            if(!Physics.CheckSphere(cornerSpots[i].position, 0.25f, charmLayer.value))
+            {
+                charmToPlace.transform.position = cornerSpots[i].position;
+            }
+        }
     }
 
     public void UpdateBoneCharmPosition_BoneYard(BoneCharm charm, int placementIdx)
     {
         if(placementIdx < cornerSpots.Count)
-            charm.transform.position = cornerSpots[placementIdx].position;
+            charm.UpdateBoneCharmPosition(cornerSpots[placementIdx].position);
     }
 
    
@@ -259,7 +271,7 @@ public class BoneYard : NetworkBehaviour
     {
         for(int i = 0; i < boneYard.Count; i++)
         {
-            boneYard[i].transform.position = GetDraftPositionInBoneYard(i);
+            boneYard[i].UpdateBoneCharmPosition(GetDraftPositionInBoneYard(i));
         }
     }
 
@@ -293,6 +305,7 @@ public class BoneYard : NetworkBehaviour
 
     public void ShuffleBoneYard()
     {
+        return;
         int shuffles = Random.Range(2, 5);
         for(int x = 0; x < shuffles; x++)
         {
@@ -307,8 +320,8 @@ public class BoneYard : NetworkBehaviour
                 //boneYard[i].transform.SetParent(boneYard[r].transform.parent);
                 //boneYard[r].transform.SetParent(parent);
 
-                boneYard[i].transform.position = posB;
-                boneYard[r].transform.position = posA;
+                boneYard[i].UpdateBoneCharmPosition(posB);
+                boneYard[r].UpdateBoneCharmPosition(posA);
             }
         }
         
@@ -369,6 +382,14 @@ public class BoneYard : NetworkBehaviour
 
     public BoneCharm GetRandomBoneCharm()
     {
+        if (boneYard.Count == 0) { return null; }
+        int r = Random.Range(0, boneYard.Count);
+        BoneCharm retval = boneYard[r];
+        return retval;
+    }
+
+    public BoneCharm RemoveRandomBoneCharm()
+    {
         if(boneYard.Count == 0) { return null; }
         int r = Random.Range(0, boneYard.Count);
 
@@ -393,7 +414,7 @@ public class BoneYard : NetworkBehaviour
     public BoneCharm GetRandomCharm_AI()
     {
         if(boneYard.Count == 0) { return null; }
-        BoneCharm best = GetRandomBoneCharm();
+        BoneCharm best = RemoveRandomBoneCharm();
         if(best != null) { return best; }
         int r = Random.Range(0, boneYard.Count);
         boneYard.RemoveAt(r);
@@ -404,7 +425,7 @@ public class BoneYard : NetworkBehaviour
     {
         boneYard.Remove(charm);
         boneYardUI.UpdateBoneYardUI(this);
-        MoveBoneYardToCorners();
+        //MoveBoneYardToCorners();
     }
 
     public void RemoveBoneCharms(List<BoneCharm> charms)
@@ -414,7 +435,7 @@ public class BoneYard : NetworkBehaviour
             boneYard.Remove(c);
         }
         boneYardUI.UpdateBoneYardUI(this);
-        MoveBoneYardToCorners();
+        //MoveBoneYardToCorners();
     }
 
     List<BoneCharm> GetInitialHand(int count)

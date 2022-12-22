@@ -10,10 +10,24 @@ public class ResultsDisplay : MonoBehaviour
     public TextMeshProUGUI resultsText;
     public float duration = 1.5f;
 
+    public MidRoundResultsDisplay midRoundResultsDisplay;
+    public GameObject resultsDisplayObj;
+
     private void Start()
     {
         fillPanel.enabled = false;
         resultsText.gameObject.SetActive(false);
+        resultsDisplayObj.SetActive(false);
+    }
+
+    public void ShowMidRoundResults(PlayerRoundScore[] bcPlayers, int currentRound)
+    {
+        //midRoundResultsDisplay.DisplayMidRoundResults(BCPlayersInGame.instance.GetPlayers(), BCPlayersInGame.instance.currentRound.Value);
+        midRoundResultsDisplay.DisplayMidRoundResults(bcPlayers, currentRound);
+        resultsDisplayObj.SetActive(true);
+        fillPanel.gameObject.SetActive(true);
+        fillPanel.enabled = true;
+        StartCoroutine(AnimateResults());
     }
 
     public void ShowResults(bool winner)
