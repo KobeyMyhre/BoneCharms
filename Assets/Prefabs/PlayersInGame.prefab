@@ -48,7 +48,7 @@ MonoBehaviour:
   playersInGame: []
   currentRound:
     m_InternalValue: 0
-  totalRounds: 2
+  totalRounds: 3
 --- !u!114 &2484548339761077211
 MonoBehaviour:
   m_ObjectHideFlags: 0

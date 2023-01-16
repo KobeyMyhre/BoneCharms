@@ -582,10 +582,5 @@ PrefabInstance:
       propertyPath: m_Name
       value: BC_NetworkManager
       objectReference: {fileID: 0}
-    - target: {fileID: 5462160071034822383, guid: 740e9520c292992428cea8ea0e3745db,
-        type: 3}
-      propertyPath: LogLevel
-      value: 0
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 740e9520c292992428cea8ea0e3745db, type: 3}

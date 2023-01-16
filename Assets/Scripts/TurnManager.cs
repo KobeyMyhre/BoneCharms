@@ -324,12 +324,10 @@ public class TurnManager : NetworkBehaviour
             SetTurnToken(players[playerIdx].playerHand.turnTokenPosition);
             
         }
-        for (int i = 0; i < players.Count; i++)
+        List<BaseHand> otherHands = GetNonActivePlayerHands();
+        foreach(BaseHand hand in otherHands)
         {
-            if (i != playerIdx && players[i].playerHand != null)
-            {
-                players[i].playerHand.PlaceHandPositions();
-            }
+            hand.PlaceHandPositions();
         }
     }
 
@@ -350,22 +348,19 @@ public class TurnManager : NetworkBehaviour
         }
     }
 
-    [ServerRpc(RequireOwnership = false)]
-    public void ClientTickTurnIdxServerRpc(bool ignoreTick = false)
-    {
-        TickTurnIdx(ignoreTick);
-    }
+    //[ServerRpc(RequireOwnership = false)]
+    //public void ClientTickTurnIdxServerRpc(bool ignoreTick = false)
+    //{
+    //    TickTurnIdx(ignoreTick);
+    //}
 
-    public void TickTurnIdx(bool ignoreTick = false)
+    public bool AttemptToFinishGame()
     {
-        if (!IsServer) { return; }
-
-        players[turnIdx].playerHand.EndTurn();
         int winner = CheckForGameOver();
-        if(winner != -1)
+        if (winner != -1)
         {
             //Add up all the Points
-            foreach(BC_Player p in players)
+            foreach (BC_Player p in players)
             {
                 BCPlayerInLobby playerInGame = BCPlayersInGame.instance.GetPlayerInGame(p.clientID);
                 playerInGame.AddRoundPoints(p.playerHand);
@@ -381,8 +376,42 @@ public class TurnManager : NetworkBehaviour
                 DisplayMidRoundResultsClientRpc(BCPlayersInGame.instance.GetRoundScoreDate(), BCPlayersInGame.instance.currentRound.Value);
             }
 
+            return true;
+        }
+        return false;
+    }
+
+    public void TickTurnIdx(bool ignoreTick = false)
+    {
+        if (!IsServer) { return; }
+
+        players[turnIdx].playerHand.EndTurn();
+        if (AttemptToFinishGame())
+        {
             return;
         }
+        //int winner = CheckForGameOver();
+        //if(winner != -1)
+        //{
+        //    //Add up all the Points
+        //    foreach(BC_Player p in players)
+        //    {
+        //        BCPlayerInLobby playerInGame = BCPlayersInGame.instance.GetPlayerInGame(p.clientID);
+        //        playerInGame.AddRoundPoints(p.playerHand);
+        //    }
+        //    //players[winner].score++;
+        //    //resultsDisplay.ShowResults(players[winner].isMe);
+        //    if (BCPlayersInGame.instance.IsMatchOver())
+        //    {
+        //        DisplayWinnerClientRpc(players[winner].clientID);
+        //    }
+        //    else
+        //    {
+        //        DisplayMidRoundResultsClientRpc(BCPlayersInGame.instance.GetRoundScoreDate(), BCPlayersInGame.instance.currentRound.Value);
+        //    }
+
+        //    return;
+        //}
 
         if(!ignoreTick)
             turnIdx++;
@@ -487,6 +516,19 @@ public class TurnManager : NetworkBehaviour
             SceneLoader.instance.LoadSceneNetworked(eScenes.GameplayRoundCleanUp);
             //NetworkManager.Singleton.Shutdown();
         }
+    }
+
+    public bool IsCharmInOtherPlayerHand(BoneCharm charm)
+    {
+        List<BaseHand> otherHands = GetNonActivePlayerHands();
+        foreach(BaseHand hand in otherHands)
+        {
+            if (hand.myHand.Contains(charm))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     int CheckForGameOver()

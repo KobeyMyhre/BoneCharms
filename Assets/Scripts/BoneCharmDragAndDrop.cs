@@ -86,7 +86,9 @@ public class BoneCharmDragAndDrop : MonoBehaviour
             bool madePlay = false;
             if(currentSelected != null && BoardCenter.instance.IsVaidPlayPosition(Input.mousePosition))
             {
-                int playType = BoardCenter.instance.CanPlayBoneCharm(currentSelected);
+                Vector3 cursorPosition = GetCursorPositionOnBoard();
+                bool trackChosen = BoardCenter.instance.GetClosestEnd(cursorPosition);
+                int playType = BoardCenter.instance.CanPlayBoneCharm(currentSelected, trackChosen);
                 if (playType != -1)
                 {
                     currentSelected.transform.rotation = Quaternion.identity;
@@ -95,8 +97,7 @@ public class BoneCharmDragAndDrop : MonoBehaviour
                     dragHandReturn.RemoveCharmFromHand(currentSelected);
                     dragHandReturn.ClearPlayables();
                     madePlay = true;
-                    Vector3 cursorPosition = GetCursorPositionOnBoard();
-                    bool trackChosen = BoardCenter.instance.GetClosestEnd(cursorPosition);
+                    trackChosen = playType == 1;
                     BoardCenter.instance.PlayBoneCharmServerRpc(BoneCharmManager.GetNetDataFromCharm(currentSelected), (ulong)dragHandReturn.playerID, trackChosen);
                 }
                 //if (BoardCenter.instance.PlayBoneCharm(currentSelected, dragHandReturn))

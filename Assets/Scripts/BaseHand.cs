@@ -143,23 +143,26 @@ public class BaseHand : NetworkBehaviour
 
     public virtual void AddBoneToHand(BoneCharm charm)
     {
-        myHand.Add(charm);
-        //charm.transform.SetParent(handPositionHandler.transform);
-        charm.SetOrientation(charmDirection);
-        //charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
-        charm.UpdateLocation(eLocation.ePlayerHand, (int)playerID);
-        charm.SetOwnerHand(this);
-        if (OverrideReveal())
+        if (!myHand.Contains(charm) && !TurnManager.instance.IsCharmInOtherPlayerHand(charm))
         {
-            charm.SetFlipOverride();
+            myHand.Add(charm);
+            //charm.transform.SetParent(handPositionHandler.transform);
+            charm.SetOrientation(charmDirection);
+            //charm.UpdateBoneCharmSelectedEvent(PlayCharmFromHand);
+            charm.UpdateLocation(eLocation.ePlayerHand, (int)playerID);
+            charm.SetOwnerHand(this);
+            if (OverrideReveal())
+            {
+                charm.SetFlipOverride();
+            }
+            if (BoardCenter.instance.IsCharmValidOnBoard(charm))
+            {
+                ShowDrawHint(false);
+                //BoneCharmManager.instance.boneYard.DisplayBoneYardDrawHint(false);
+            }
+            PlaceHandPositions();
+            onHandUpdate?.Invoke(this);
         }
-        if (BoardCenter.instance.IsCharmValidOnBoard(charm))
-        {
-            ShowDrawHint(false);
-            //BoneCharmManager.instance.boneYard.DisplayBoneYardDrawHint(false);
-        }
-        PlaceHandPositions();
-        onHandUpdate?.Invoke(this);
     }
 
     public virtual bool StartTurn()
@@ -172,7 +175,8 @@ public class BaseHand : NetworkBehaviour
         }
         else if (BoneCharmManager.instance.boneYard.IsEmpty())
         {
-            TurnManager.instance.TickTurnIdx();
+            GameplayTransitions.instance.PassTurn();
+            //TurnManager.instance.TickTurnIdx();
             Debug.Log("PASS!NO PLAY!");
             return false;
         }
@@ -241,6 +245,10 @@ public class BaseHand : NetworkBehaviour
 
     public void PlaceHandPositions()
     {
+        foreach(BoneCharm charm in myHand)
+        {
+            charm.SetOrientation(charmDirection);
+        }
         handPositionHandler.FitBoneCharmsInBounds(myHand);
     }
 

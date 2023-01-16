@@ -62,13 +62,12 @@ public class BoneCharm : NetworkBehaviour
     //public LocationData location;
     public GameObject meshObject;
     public Transform rotator;
-    bool isSwapped = false;
+    public bool isSwapped = false;
     bool isLocked = false;
     public SpriteRenderer backdropRender;
     public MeshRenderer charmMesh;
     public Sprite revealedBackdrop;
     public Sprite hiddenBackdrop;
-    public eOrientation orientation;
     public eAttached attachedType;
     //Network This
     public NetworkVariable<eCharmType> topCharmType = new NetworkVariable<eCharmType>();
@@ -133,7 +132,6 @@ public class BoneCharm : NetworkBehaviour
             botSprite.color = bcManager.GetBoneCharmColor(botCharm);
             SetRevealedState(false);
         }
-        orientation = eOrientation.eStandard;
         DisplayAttaches(false);
 
         topCharmType.OnValueChanged += OnTopCharmTypeChange;
@@ -147,6 +145,7 @@ public class BoneCharm : NetworkBehaviour
         BoneCharmManager bcManager = BoneCharmManager.instance;
         topSprite.sprite = bcManager.GetBoneCharmSprite(curr);
         topSprite.color = bcManager.GetBoneCharmColor(curr);
+        gameObject.name = string.Format("{0} // {1}", topCharmType.Value.ToString(), botCharmType.Value.ToString());
     }
 
 
@@ -156,6 +155,7 @@ public class BoneCharm : NetworkBehaviour
         BoneCharmManager bcManager = BoneCharmManager.instance;
         botSprite.sprite = bcManager.GetBoneCharmSprite(curr);
         botSprite.color = bcManager.GetBoneCharmColor(curr);
+        gameObject.name = string.Format("{0} // {1}", topCharmType.Value.ToString(), botCharmType.Value.ToString());
     }
 
     public Bounds GetBounds()
@@ -189,7 +189,7 @@ public class BoneCharm : NetworkBehaviour
                 break;
             case BoardCenter.eDirection.eSouth:
                 //Shift Position
-                rotator.localPosition += Vector3.down * (GetHeight() /2.0f);
+                rotator.localPosition = Vector3.down * (GetHeight() /2.0f);
                 //rotator.localRotation = Quaternion.AngleAxis(180, Vector3.forward);
                 break;
             case BoardCenter.eDirection.eWest:
@@ -198,7 +198,7 @@ public class BoneCharm : NetworkBehaviour
                 break;
             case BoardCenter.eDirection.eEast:
                 rotator.localRotation = Quaternion.AngleAxis(90, Vector3.forward);
-                rotator.localPosition += Vector3.right * (GetWidth() / 2.0f);
+                rotator.localPosition = Vector3.right * (GetWidth() / 2.0f);
                 //rotator.localRotation = Quaternion.AngleAxis(-90, Vector3.forward);
                 break;
         }
@@ -443,18 +443,80 @@ public class BoneCharm : NetworkBehaviour
         }
     }
 
+    public eCharmType GetSharedType(BoneCharm other)
+    {
+        eCharmType[] myTypes = GetTypes();
+        eCharmType[] otherTypes = other.GetTypes();
+
+        for(int i = 0; i < myTypes.Length; i++)
+        {
+            for(int j = 0; j < otherTypes.Length; j++)
+            {
+                if(myTypes[i] == otherTypes[i])
+                {
+                    return myTypes[i];
+                }
+            }
+        }
+        return eCharmType.eSizeOfCharms;
+    }
+
     public eCharmType GetOutwardType(bool north, BoardCenter.eDirection direction)
     {
         eCharmType retval = eCharmType.eSizeOfCharms;
         if(north)
         {
-            if (direction == BoardCenter.eDirection.eSouth) { retval = isSwapped ? topCharmType.Value : botCharmType.Value; }
-            else { retval = isSwapped ? botCharmType.Value : topCharmType.Value; }
+            if (myDirection == BoardCenter.eDirection.eSouth) 
+            {
+                if (isSwapped)
+                {
+                    retval = topCharmType.Value;
+                }
+                else
+                {
+                    retval = botCharmType.Value;
+                }
+                //retval = isSwapped ? topCharmType.Value : botCharmType.Value; 
+            }
+            else 
+            {
+                if (isSwapped)
+                {
+                    retval = botCharmType.Value;
+                }
+                else
+                {
+                    retval = topCharmType.Value;
+                }
+                //retval = isSwapped ? botCharmType.Value : topCharmType.Value;
+            }
         }
-        else
+        else //South
         {
-            if (direction == BoardCenter.eDirection.eNorth) { retval = isSwapped ? botCharmType.Value : topCharmType.Value; }
-            else { retval = isSwapped ? topCharmType.Value : botCharmType.Value; }
+            if (myDirection == BoardCenter.eDirection.eNorth) 
+            {
+                if (isSwapped)
+                {
+                    retval = botCharmType.Value;
+                }
+                else
+                {
+                    retval = topCharmType.Value;
+                }
+                //retval = isSwapped ? botCharmType.Value : topCharmType.Value; 
+            }
+            else 
+            {
+                if (isSwapped)
+                {
+                    retval = topCharmType.Value;
+                }
+                else
+                {
+                    retval = botCharmType.Value;
+                }
+                //retval = isSwapped ? topCharmType.Value : botCharmType.Value; 
+            }
         }
         return retval;
     }
@@ -521,7 +583,7 @@ public class BoneCharm : NetworkBehaviour
         return myDirection;
     }
 
-    BoardCenter.eDirection myDirection;
+    public BoardCenter.eDirection myDirection;
     public Vector3 GetAttachPosition(bool north, BoardCenter.eDirection direction)
     {
         Vector3 targetDir = Vector3.zero;
@@ -629,6 +691,7 @@ public class BoneCharm : NetworkBehaviour
         //}
         //return transform.position;
     }
+
 
     public void UpdateLocation(eLocation newLocation, int handID = -1)
     {

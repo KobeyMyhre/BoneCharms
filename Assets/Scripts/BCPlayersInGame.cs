@@ -51,7 +51,7 @@ public class BCPlayersInGame : NetworkBehaviour
 
     public bool IsMatchOver()
     {
-        return currentRound.Value <= totalRounds;
+        return !(currentRound.Value <= totalRounds);
     }
 
     public void AddPlayer(BCPlayerInLobby playerInLobby)

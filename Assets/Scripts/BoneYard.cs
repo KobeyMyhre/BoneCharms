@@ -50,32 +50,38 @@ public class BoneYard : NetworkBehaviour
     public void AddNetworkSpawnToBoneyard(BoneCharm charm)
     {
         if(boneYard == null) { boneYard = new List<BoneCharm>(); }
-        boneYard.Add(charm);
+        if (!boneYard.Contains(charm))
+        {
+            boneYard.Add(charm);
+        }
     }
 
     public void AddBoneCharmToBoneYard(BoneCharm boneCharm, bool duringGame = true)
     {
         //boneCharm.transform.SetParent(boneYard.Count >= Mathf.RoundToInt(28 / 2.0f) ? botHalf : topHalf);
-        boneCharm.transform.localScale = Vector3.one;
-        boneCharm.SetRevealedState(false);
-        boneCharm.SetOrientation(BoardCenter.eDirection.eNorth);
-        boneCharm.UpdateLocation(eLocation.eBoneYard);
-        boneYard.Add(boneCharm);
-        if (duringGame)
+        if (!boneYard.Contains(boneCharm))
         {
-            boneCharm.SetPreviousCharm(null);
-            boneCharm.SetNextCharm(null);
-            boneCharm.SetOwnerHand(null);
-            //boneCharm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_ServerRequest);
-            boneCharm.UpdateBoneCharmSelectedEvent(AddBoneToPlayerHandRequest);
-            MoveBoneYardToCorners();
-            //MoveCharmToBoneYardCorner(boneCharm);
-            ShuffleBoneYard();
-        }
-        else
-        {
-            //boneCharm.UpdateBoneCharmSelectedEvent(BoneCharmSelected_BoneYard);
-            SetBoneYardPositions();
+            boneCharm.transform.localScale = Vector3.one;
+            boneCharm.SetRevealedState(false);
+            boneCharm.SetOrientation(BoardCenter.eDirection.eNorth);
+            boneCharm.UpdateLocation(eLocation.eBoneYard);
+            boneYard.Add(boneCharm);
+            if (duringGame)
+            {
+                boneCharm.SetPreviousCharm(null);
+                boneCharm.SetNextCharm(null);
+                boneCharm.SetOwnerHand(null);
+                //boneCharm.UpdateBoneCharmSelectedEvent(TurnManager.instance.GetPlayerHostHand().AddBoneToHand_ServerRequest);
+                boneCharm.UpdateBoneCharmSelectedEvent(AddBoneToPlayerHandRequest);
+                MoveBoneYardToCorners();
+                //MoveCharmToBoneYardCorner(boneCharm);
+                ShuffleBoneYard();
+            }
+            else
+            {
+                //boneCharm.UpdateBoneCharmSelectedEvent(BoneCharmSelected_BoneYard);
+                SetBoneYardPositions();
+            }
         }
     }
 
@@ -101,7 +107,10 @@ public class BoneYard : NetworkBehaviour
     {
         foreach (BoneCharm charm in boneYard)
         {
-            charm.UpdateBoneCharmSelectedEvent(BoneCharmSelected_BoneYard);
+            if (!charm.IsRevealed())
+            {
+                charm.UpdateBoneCharmSelectedEvent(BoneCharmSelected_BoneYard);
+            }
         }
     }
 

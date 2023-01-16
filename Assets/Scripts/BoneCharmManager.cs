@@ -378,132 +378,132 @@ public class BoneCharmManager : NetworkBehaviour
     //    ResolveBoneCharmEffect(charmA, charmB, charmType, north, targetOpponent);
     //}
 
-    public void ResolveBoneCharmEffect(BoneCharm charmA, BoneCharm charmB, eCharmType charmType, bool north, BaseHand targetOpponent)
-    {
-        bool blueCharm = false;
-        //List<BaseHand> opponents;
-        int r;
-        switch (charmType)
-        {
-            case eCharmType.eBlankCharm:
-                break;
-            case eCharmType.ePinkCharm:
-                List<BoneCharm> revealedCharms = boneYard.RevealBoneCharmInBoneYard(2);
-                for(int i = 0; i < revealedCharms.Count; i++)
-                {
-                    if(revealedCharms[i] != null)
-                    {
-                        revealedCharms[i].PlayTargettedAoE(charmType);
-                    }
-                }
-                break;
-            case eCharmType.eYellowCharm:
-                break;
-                if(targetOpponent == null) //Player Version
-                {
-                    BaseHand swapCharmHandA = charmA.GetOwnerHand();
-                    BaseHand swapCharmHandB = charmB.GetOwnerHand();
-                    if (swapCharmHandA == null)
-                    {
-                        charmA.PlayTargettedAoE(charmType);
-                        charmB.PlayTargettedAoE(charmType);
+    //public void ResolveBoneCharmEffect(BoneCharm charmA, BoneCharm charmB, eCharmType charmType, bool north, BaseHand targetOpponent)
+    //{
+    //    bool blueCharm = false;
+    //    //List<BaseHand> opponents;
+    //    int r;
+    //    switch (charmType)
+    //    {
+    //        case eCharmType.eBlankCharm:
+    //            break;
+    //        case eCharmType.ePinkCharm:
+    //            List<BoneCharm> revealedCharms = boneYard.RevealBoneCharmInBoneYard(2);
+    //            for(int i = 0; i < revealedCharms.Count; i++)
+    //            {
+    //                if(revealedCharms[i] != null)
+    //                {
+    //                    revealedCharms[i].PlayTargettedAoE(charmType);
+    //                }
+    //            }
+    //            break;
+    //        case eCharmType.eYellowCharm:
+    //            break;
+    //            if(targetOpponent == null) //Player Version
+    //            {
+    //                BaseHand swapCharmHandA = charmA.GetOwnerHand();
+    //                BaseHand swapCharmHandB = charmB.GetOwnerHand();
+    //                if (swapCharmHandA == null)
+    //                {
+    //                    charmA.PlayTargettedAoE(charmType);
+    //                    charmB.PlayTargettedAoE(charmType);
 
-                        swapCharmHandB.RemoveCharmFromHand(charmB);
-                        boneYard.RemoveBoneCharm(charmA);
+    //                    swapCharmHandB.RemoveCharmFromHand(charmB);
+    //                    boneYard.RemoveBoneCharm(charmA);
 
-                        swapCharmHandB.AddBoneToHand(charmA);
-                        boneYard.AddBoneCharmToBoneYard(charmB);
-                        //Swap HandB with BoneYard
-                    }
-                    else if (swapCharmHandB == null)
-                    {
-                        charmA.PlayTargettedAoE(charmType);
-                        charmB.PlayTargettedAoE(charmType);
+    //                    swapCharmHandB.AddBoneToHand(charmA);
+    //                    boneYard.AddBoneCharmToBoneYard(charmB);
+    //                    //Swap HandB with BoneYard
+    //                }
+    //                else if (swapCharmHandB == null)
+    //                {
+    //                    charmA.PlayTargettedAoE(charmType);
+    //                    charmB.PlayTargettedAoE(charmType);
 
-                        swapCharmHandA.RemoveCharmFromHand(charmA);
-                        boneYard.RemoveBoneCharm(charmB);
+    //                    swapCharmHandA.RemoveCharmFromHand(charmA);
+    //                    boneYard.RemoveBoneCharm(charmB);
 
-                        swapCharmHandA.AddBoneToHand(charmB);
-                        boneYard.AddBoneCharmToBoneYard(charmA);
-                        //Swap HandA with BoneYard
-                    }
-                    else
-                    {
-                        charmA.PlayTargettedAoE(charmType);
-                        charmB.PlayTargettedAoE(charmType);
+    //                    swapCharmHandA.AddBoneToHand(charmB);
+    //                    boneYard.AddBoneCharmToBoneYard(charmA);
+    //                    //Swap HandA with BoneYard
+    //                }
+    //                else
+    //                {
+    //                    charmA.PlayTargettedAoE(charmType);
+    //                    charmB.PlayTargettedAoE(charmType);
 
-                        swapCharmHandA.RemoveCharmFromHand(charmA);
-                        swapCharmHandB.RemoveCharmFromHand(charmB);
-                        charmA.SetRevealedState();
-                        charmB.SetRevealedState();
+    //                    swapCharmHandA.RemoveCharmFromHand(charmA);
+    //                    swapCharmHandB.RemoveCharmFromHand(charmB);
+    //                    charmA.SetRevealedState();
+    //                    charmB.SetRevealedState();
 
 
-                        swapCharmHandA.AddBoneToHand(charmB);
-                        swapCharmHandB.AddBoneToHand(charmA);
-                        //Swap HandA with HandB
-                    }
-                }
-                else //AI Version
-                {
-                    BoneCharm swapCharmBoneYard = boneYard.RemoveRandomBoneCharm();
-                    if (swapCharmBoneYard != null)
-                    {
-                        BoneCharm swapCharmHand = targetOpponent.GetRandomCharm();
-                        if (swapCharmHand != null)
-                        {
-                            swapCharmHand.PlayTargettedAoE(charmType);
-                            swapCharmBoneYard.PlayTargettedAoE(charmType);
+    //                    swapCharmHandA.AddBoneToHand(charmB);
+    //                    swapCharmHandB.AddBoneToHand(charmA);
+    //                    //Swap HandA with HandB
+    //                }
+    //            }
+    //            else //AI Version
+    //            {
+    //                BoneCharm swapCharmBoneYard = boneYard.RemoveRandomBoneCharm();
+    //                if (swapCharmBoneYard != null)
+    //                {
+    //                    BoneCharm swapCharmHand = targetOpponent.GetRandomCharm();
+    //                    if (swapCharmHand != null)
+    //                    {
+    //                        swapCharmHand.PlayTargettedAoE(charmType);
+    //                        swapCharmBoneYard.PlayTargettedAoE(charmType);
 
-                            targetOpponent.AddBoneToHand(swapCharmBoneYard);
-                            boneYard.AddBoneCharmToBoneYard(swapCharmHand);
-                        }
-                    }
-                }
-                break;
-            case eCharmType.eGreenCharm:
-                break;
-                BoneCharm revealed = targetOpponent.RevealRandomCharm();
-                if(revealed != null) { revealed.PlayTargettedAoE(charmType); }
-                break;
-            case eCharmType.eWhiteCharm:
-                break;
-                if(north)
-                {
-                    BoneCharm toYard = BoardCenter.instance.RemoveSouthTrack();
-                    toYard.PlayTargettedAoE(charmType);
-                    if(toYard == BoardCenter.instance.southCharm)
-                    {
-                        Debug.LogError("White Charm Broke");
-                    }
-                    boneYard.AddBoneCharmToBoneYard(toYard);
-                }
-                else
-                {
-                    BoneCharm toYard = BoardCenter.instance.RemoveNorthTrack();
-                    toYard.PlayTargettedAoE(charmType);
-                    if (toYard == BoardCenter.instance.northCharm)
-                    {
-                        Debug.LogError("White Charm Broke");
-                    }
-                    boneYard.AddBoneCharmToBoneYard(toYard);
-                }
-                break;
-            case eCharmType.eBlueCharm:
-                blueCharm = true;
-                break;
-            case eCharmType.ePurpleCharm:
-                break;
-                BoneCharm newCharm = boneYard.RemoveRandomBoneCharm();
-                if(newCharm != null)
-                {
-                    newCharm.PlayTargettedAoE(charmType);
-                    targetOpponent.AddBoneToHand(newCharm);
-                }
-                break;
-        }
-        //TurnManager.instance.TickTurnIdx(blueCharm);
-        GameplayTransitions.instance.PassTurn(blueCharm);
-    }
+    //                        targetOpponent.AddBoneToHand(swapCharmBoneYard);
+    //                        boneYard.AddBoneCharmToBoneYard(swapCharmHand);
+    //                    }
+    //                }
+    //            }
+    //            break;
+    //        case eCharmType.eGreenCharm:
+    //            break;
+    //            BoneCharm revealed = targetOpponent.RevealRandomCharm();
+    //            if(revealed != null) { revealed.PlayTargettedAoE(charmType); }
+    //            break;
+    //        case eCharmType.eWhiteCharm:
+    //            break;
+    //            if(north)
+    //            {
+    //                BoneCharm toYard = BoardCenter.instance.RemoveSouthTrack();
+    //                toYard.PlayTargettedAoE(charmType);
+    //                if(toYard == BoardCenter.instance.southCharm)
+    //                {
+    //                    Debug.LogError("White Charm Broke");
+    //                }
+    //                boneYard.AddBoneCharmToBoneYard(toYard);
+    //            }
+    //            else
+    //            {
+    //                BoneCharm toYard = BoardCenter.instance.RemoveNorthTrack();
+    //                toYard.PlayTargettedAoE(charmType);
+    //                if (toYard == BoardCenter.instance.northCharm)
+    //                {
+    //                    Debug.LogError("White Charm Broke");
+    //                }
+    //                boneYard.AddBoneCharmToBoneYard(toYard);
+    //            }
+    //            break;
+    //        case eCharmType.eBlueCharm:
+    //            blueCharm = true;
+    //            break;
+    //        case eCharmType.ePurpleCharm:
+    //            break;
+    //            BoneCharm newCharm = boneYard.RemoveRandomBoneCharm();
+    //            if(newCharm != null)
+    //            {
+    //                newCharm.PlayTargettedAoE(charmType);
+    //                targetOpponent.AddBoneToHand(newCharm);
+    //            }
+    //            break;
+    //    }
+    //    //TurnManager.instance.TickTurnIdx(blueCharm);
+    //    GameplayTransitions.instance.PassTurn(blueCharm);
+    //}
 
     public Color GetBoneCharmColor(eCharmType charmType)
     {
